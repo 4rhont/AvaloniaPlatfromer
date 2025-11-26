@@ -7,7 +7,7 @@ namespace GameApp.Core.Services
         public const double Gravity = 900;
         public const double MoveAcceleration = 1200;
         public const double MaxMoveSpeed = 300;
-        public const double JumpVelocity = -400;
+        public const double JumpVelocity = -800;
         public const double GroundFriction = 800;
 
         public static bool CheckCollision(Player player, Platform platform)

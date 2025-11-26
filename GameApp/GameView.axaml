@@ -38,7 +38,7 @@
                    Text="{Binding Player.IsOnGround, StringFormat='On Ground: {0}'}" 
                    Foreground="Black" FontSize="16"/>
         <TextBlock Canvas.Left="10" Canvas.Top="100" 
-                   Text="Using Textures" 
+                   Text="Platforms from code" 
                    Foreground="DarkGreen" FontSize="16" FontWeight="Bold"/>
         
         <!-- Подсказка по управлению -->

@@ -1,27 +1,28 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using GameApp.Core.Input;
 using GameApp.Core.Models;
 using GameApp.Core.ViewModels;
-using ReactiveUI;
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace GameApp.Views
 {
     public partial class GameView : Window
     {
-        private Dictionary<Platform, Image> _platformImages = new Dictionary<Platform, Image>();
+        private List<Control> _platformVisuals = new List<Control>(); // Изменили тип на Control
         private GameViewModel _viewModel;
         private Bitmap _platformTexture;
 
         public GameView()
         {
             InitializeComponent();
-            LoadTextures();
+            LoadPlatformTexture();
 
             Focusable = true;
             AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
@@ -30,87 +31,94 @@ namespace GameApp.Views
             DataContextChanged += OnDataContextChanged;
         }
 
-        private void LoadTextures()
-        {
-            try
-            {
-                // Загрузка текстуры платформы
-                _platformTexture = new Bitmap("Assets/platform.png");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to load texture: {ex.Message}");
-                // Создаем fallback - можно использовать цветные прямоугольники
-            }
-        }
-
         private void OnDataContextChanged(object sender, EventArgs e)
         {
             _viewModel = DataContext as GameViewModel;
             if (_viewModel != null)
             {
-                _viewModel.Platforms.CollectionChanged += Platforms_CollectionChanged;
-                UpdateAllPlatforms();
+                CreatePlatforms();
             }
         }
 
-        private void Platforms_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        private void LoadPlatformTexture()
         {
-            if (e.OldItems != null)
+            try
             {
-                foreach (Platform platform in e.OldItems)
+                var uri = new Uri("avares://GameApp/Assets/platform.png");
+                _platformTexture = new Bitmap(AssetLoader.Open(uri));
+                System.Diagnostics.Debug.WriteLine("Platform texture loaded successfully");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to load platform texture: {ex.Message}");
+                _platformTexture = null;
+            }
+        }
+
+        private void CreatePlatforms()
+        {
+            // Очищаем старые платформы
+            foreach (var visual in _platformVisuals)
+            {
+                MainCanvas.Children.Remove(visual);
+            }
+            _platformVisuals.Clear();
+
+            // Создаем новые платформы
+            if (_viewModel != null)
+            {
+                foreach (var platform in _viewModel.Platforms)
                 {
-                    if (_platformImages.TryGetValue(platform, out Image image))
+                    if (_platformTexture != null)
                     {
-                        MainCanvas.Children.Remove(image);
-                        _platformImages.Remove(platform);
+                        // Используем кэшированную текстуру
+                        var platformImage = new Image
+                        {
+                            Width = platform.Width,
+                            Height = platform.Height,
+                            Source = _platformTexture,
+                            Stretch = Stretch.Fill
+                        };
+
+                        Canvas.SetLeft(platformImage, platform.X);
+                        Canvas.SetTop(platformImage, platform.Y);
+
+                        MainCanvas.Children.Add(platformImage);
+                        _platformVisuals.Add(platformImage);
+                    }
+                    else
+                    {
+                        // Fallback - создаем цветной прямоугольник
+                        CreateFallbackPlatform(platform);
                     }
                 }
             }
+        }
 
-            if (e.NewItems != null)
+        private void CreateFallbackPlatform(Platform platform)
+        {
+            try
             {
-                foreach (Platform platform in e.NewItems)
+                var rectangle = new Avalonia.Controls.Shapes.Rectangle
                 {
-                    CreatePlatformImage(platform);
-                }
+                    Width = platform.Width,
+                    Height = platform.Height,
+                    Fill = new SolidColorBrush(Colors.Green),
+                    Stroke = new SolidColorBrush(Colors.DarkGreen),
+                    StrokeThickness = 2
+                };
+
+                Canvas.SetLeft(rectangle, platform.X);
+                Canvas.SetTop(rectangle, platform.Y);
+                MainCanvas.Children.Add(rectangle);
+                _platformVisuals.Add(rectangle);
+
+                System.Diagnostics.Debug.WriteLine($"Created fallback platform at ({platform.X}, {platform.Y})");
             }
-        }
-
-        private void UpdateAllPlatforms()
-        {
-            // Очищаем старые платформы
-            foreach (var image in _platformImages.Values)
+            catch (Exception ex)
             {
-                MainCanvas.Children.Remove(image);
+                System.Diagnostics.Debug.WriteLine($"Failed to create fallback platform: {ex.Message}");
             }
-            _platformImages.Clear();
-
-            // Создаем новые платформы
-            foreach (var platform in _viewModel.Platforms)
-            {
-                CreatePlatformImage(platform);
-            }
-        }
-
-        private void CreatePlatformImage(Platform platform)
-        {
-            var image = new Image
-            {
-                Width = platform.Width,
-                Height = platform.Height,
-                Source = _platformTexture
-            };
-
-            Canvas.SetLeft(image, platform.X);
-            Canvas.SetTop(image, platform.Y);
-
-            MainCanvas.Children.Add(image);
-            _platformImages[platform] = image;
-
-            // Подписываемся на изменения позиции платформы
-            platform.WhenAnyValue(p => p.X).Subscribe(x => Canvas.SetLeft(image, x));
-            platform.WhenAnyValue(p => p.Y).Subscribe(y => Canvas.SetTop(image, y));
         }
 
         private void OnActivated(object sender, EventArgs e)
