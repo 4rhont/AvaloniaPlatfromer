@@ -44,6 +44,18 @@ namespace GameApp.Core.Models
             Y = y;
             Width = width;
             Height = height;
+
+            // Подписываемся на изменения размеров
+            this.WhenAnyValue(p => p.Width).Subscribe(_ => UpdateSize());
+            this.WhenAnyValue(p => p.Height).Subscribe(_ => UpdateSize());
+        }
+
+        private void UpdateSize()
+        {
+            this.RaisePropertyChanged(nameof(Right));
+            this.RaisePropertyChanged(nameof(Bottom));
+            this.RaisePropertyChanged(nameof(CenterX));
+            this.RaisePropertyChanged(nameof(CenterY));
         }
     }
 }
