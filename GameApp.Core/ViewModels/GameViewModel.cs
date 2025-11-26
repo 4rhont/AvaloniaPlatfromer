@@ -4,7 +4,8 @@ using GameApp.Core.Services;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
-using System.Numerics;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reactive.Linq;
 
 namespace GameApp.Core.ViewModels
@@ -13,21 +14,46 @@ namespace GameApp.Core.ViewModels
     {
         private readonly Player _player = new();
         private readonly HashSet<GameAction> _activeActions = new();
+        private readonly ObservableCollection<Platform> _platforms = new();
         private IDisposable _gameLoop;
         private DateTime _lastUpdateTime;
 
+        public Player Player => _player;
         public double PlayerX => _player.X;
         public double PlayerY => _player.Y;
+        public ObservableCollection<Platform> Platforms => _platforms;
 
         public GameViewModel()
         {
             _player.WhenAnyValue(p => p.X).Subscribe(_ => this.RaisePropertyChanged(nameof(PlayerX)));
             _player.WhenAnyValue(p => p.Y).Subscribe(_ => this.RaisePropertyChanged(nameof(PlayerY)));
 
+            InitializePlatforms();
+
             _lastUpdateTime = DateTime.Now;
             _gameLoop = Observable.Interval(TimeSpan.FromSeconds(1.0 / 60.0))
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(_ => UpdateGame());
+        }
+
+        private void InitializePlatforms()
+        {
+            
+            _platforms.Add(new Platform(0, 800, 1000, 20));
+
+            _platforms.Add(new Platform(500, 300, 100, 20));
+
+            // Еще одна тестовая платформа
+            _platforms.Add(new Platform(200, 500, 150, 20));
+
+            // Убрали все остальные платформы для тестирования
+            // _platforms.Add(new Platform(0, 500, 2000, 20));
+            // _platforms.Add(new Platform(300, 400, 200, 20));
+            // _platforms.Add(new Platform(600, 350, 150, 20));
+            // _platforms.Add(new Platform(900, 300, 100, 20));
+            // _platforms.Add(new Platform(1200, 250, 200, 20));
+            // _platforms.Add(new Platform(-50, 0, 50, 600));
+            // _platforms.Add(new Platform(2000, 0, 50, 600));
         }
 
         // Методы для управления действиями (не зависят от Avalonia!)
@@ -55,6 +81,23 @@ namespace GameApp.Core.ViewModels
             ApplyFriction(deltaTime);
             UpdatePosition(deltaTime);
             CheckGroundCollision();
+            CheckFallDeath();
+        }
+
+        private void CheckFallDeath()
+        {
+            // Если игрок упал ниже определенного уровня
+            if (_player.Y > 2000) // ПОКА ЧТО КОНСТАНТА ПОТОМ ПОМЕНЯТЬ
+            {
+                // Респавн игрока - возвращаем в начальную позицию
+                _player.X = 100;
+                _player.Y = 100;
+                _player.VelocityX = 0;
+                _player.VelocityY = 0;
+
+                // Потом добавим эффекты
+                System.Diagnostics.Debug.WriteLine("Player fell to death! Respawning...");
+            }
         }
 
         private void ApplyGravity(double deltaTime)
@@ -119,28 +162,18 @@ namespace GameApp.Core.ViewModels
             _player.Y += _player.VelocityY * deltaTime;
         }
 
+        // GameViewModel.cs - метод CheckGroundCollision
         private void CheckGroundCollision()
         {
-            if (_player.Y >= 350)
-            {
-                _player.Y = 350;
-                _player.VelocityY = 0;
-                _player.IsOnGround = true;
-            }
-            else
-            {
-                _player.IsOnGround = false;
-            }
+            _player.IsOnGround = false;
 
-            if (_player.X < 0)
+            foreach (var platform in _platforms)
             {
-                _player.X = 0;
-                _player.VelocityX = 0;
-            }
-            else if (_player.X > 350)
-            {
-                _player.X = 350;
-                _player.VelocityX = 0;
+                if (PhysicsService.CheckCollision(_player, platform))
+                {
+                    var collisionType = PhysicsService.GetCollisionType(_player, platform);
+                    PhysicsService.ResolveCollision(_player, platform, collisionType);
+                }
             }
         }
 

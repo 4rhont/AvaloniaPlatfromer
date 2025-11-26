@@ -2,8 +2,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:GameApp.Core.ViewModels;assembly=GameApp.Core"
         x:Class="GameApp.Views.GameView"
-        Title="Simple Platformer Test - Game Loop"
-        Width="400" Height="400"
+        Title="Platformer - Testing Collisions"
+        Width="1920" Height="1080"
         Focusable="True">
     
     <Design.DataContext>
@@ -11,30 +11,62 @@
     </Design.DataContext>
 
     <Canvas Background="LightBlue" x:DataType="vm:GameViewModel">
-        <!-- Игрок (красный кружок) -->
-        <Ellipse Width="50" Height="50" 
-                 Fill="Red" 
-                 Stroke="DarkRed" 
-                 StrokeThickness="2"
-                 Canvas.Left="{Binding PlayerX}"
-                 Canvas.Top="{Binding PlayerY}"/>
+        <!-- Визуальные ориентиры -->
+        <Rectangle Canvas.Left="0" Canvas.Top="0" 
+                   Width="1920" Height="1080" 
+                   Fill="Transparent" 
+                   Stroke="Gray" 
+                   StrokeThickness="1"
+                   StrokeDashArray="5,5"/>
         
-        <!-- Статический элемент (платформа) -->
-        <Rectangle Canvas.Left="50" Canvas.Top="300" 
-                   Width="300" Height="20" 
-                   Fill="Green"/>
+        <!-- Платформы - альтернативный подход -->
+        <ItemsControl ItemsSource="{Binding Platforms}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Canvas/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Canvas>
+                        <Rectangle Width="{Binding Width}" 
+                                   Height="{Binding Height}" 
+                                   Fill="Green"
+                                   Stroke="DarkGreen"
+                                   StrokeThickness="2"
+                                   Canvas.Left="{Binding X}"
+                                   Canvas.Top="{Binding Y}"/>
+                    </Canvas>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- Игрок -->
+        <Rectangle Width="{Binding Player.Width}" 
+                   Height="{Binding Player.Height}" 
+                   Fill="Red" 
+                   Stroke="DarkRed" 
+                   StrokeThickness="2"
+                   Canvas.Left="{Binding PlayerX}"
+                   Canvas.Top="{Binding PlayerY}"/>
         
         <!-- Отладочная информация -->
         <TextBlock Canvas.Left="10" Canvas.Top="10" 
                    Text="{Binding PlayerX, StringFormat='X: {0:F1}'}" 
-                   Foreground="Black" FontSize="12"/>
-        <TextBlock Canvas.Left="10" Canvas.Top="30" 
+                   Foreground="Black" FontSize="16"/>
+        <TextBlock Canvas.Left="10" Canvas.Top="40" 
                    Text="{Binding PlayerY, StringFormat='Y: {0:F1}'}" 
-                   Foreground="Black" FontSize="12"/>
+                   Foreground="Black" FontSize="16"/>
+        <TextBlock Canvas.Left="10" Canvas.Top="70" 
+                   Text="{Binding Player.IsOnGround, StringFormat='On Ground: {0}'}" 
+                   Foreground="Black" FontSize="16"/>
+        <TextBlock Canvas.Left="10" Canvas.Top="100" 
+                   Text="Alternative ItemsControl approach" 
+                   Foreground="DarkGreen" FontSize="16" FontWeight="Bold"/>
         
         <!-- Подсказка по управлению -->
-        <TextBlock Canvas.Left="10" Canvas.Top="370" 
-                   Text="Controls: WASD or arrows" 
-                   Foreground="Black" FontSize="10"/>
+        <TextBlock Canvas.Left="10" Canvas.Top="1040" 
+                   Text="Controls: WASD or arrows, Space to jump" 
+                   Foreground="Black" FontSize="14"/>
     </Canvas>
 </Window>

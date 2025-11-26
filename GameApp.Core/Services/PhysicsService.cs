@@ -1,17 +1,95 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using GameApp.Core.Models;
 
 namespace GameApp.Core.Services
 {
-    public class PhysicsService
+    public static class PhysicsService
     {
         public const double Gravity = 900;
         public const double MoveAcceleration = 1200;
         public const double MaxMoveSpeed = 300;
         public const double JumpVelocity = -400;
         public const double GroundFriction = 800;
+
+        public static bool CheckCollision(Player player, Platform platform)
+        {
+            return player.X < platform.X + platform.Width &&
+                   player.Right > platform.X &&
+                   player.Y < platform.Y + platform.Height &&
+                   player.Bottom > platform.Y;
+        }
+
+        public static CollisionType GetCollisionType(Player player, Platform platform)
+        {
+            var playerBottom = player.Bottom;
+            var playerRight = player.Right;
+            var platformBottom = platform.Y + platform.Height;
+            var platformRight = platform.X + platform.Width;
+
+            // Определяем глубину проникновения с каждой стороны
+            var overlapLeft = playerRight - platform.X;
+            var overlapRight = platformRight - player.X;
+            var overlapTop = playerBottom - platform.Y;
+            var overlapBottom = platformBottom - player.Y;
+
+            // Находим минимальное перекрытие
+            var minOverlap = Math.Min(Math.Min(overlapLeft, overlapRight),
+                                    Math.Min(overlapTop, overlapBottom));
+
+            // Определяем тип коллизии по минимальному перекрытию
+            if (minOverlap == overlapTop)
+            {
+                return CollisionType.Top;
+            }
+            else if (minOverlap == overlapBottom)
+            {
+                return CollisionType.Bottom;
+            }
+            else if (minOverlap == overlapLeft || minOverlap == overlapRight)
+            {
+                return CollisionType.Side;
+            }
+
+            return CollisionType.None;
+        }
+
+        public static void ResolveCollision(Player player, Platform platform, CollisionType type)
+        {
+            switch (type)
+            {
+                case CollisionType.Top:
+                    // Игрок приземляется на платформу
+                    player.Y = platform.Y - player.Height;
+                    player.VelocityY = 0;
+                    player.IsOnGround = true;
+                    break;
+
+                case CollisionType.Bottom:
+                    // Игрок ударяется головой
+                    player.Y = platform.Y + platform.Height;
+                    player.VelocityY = 0;
+                    break;
+
+                case CollisionType.Side:
+                    // Игрок ударяется сбоку
+                    if (player.CenterX < platform.CenterX) // Игрок слева от платформы
+                    {
+                        player.X = platform.X - player.Width;
+                    }
+                    else // Игрок справа от платформы
+                    {
+                        player.X = platform.X + platform.Width;
+                    }
+                    player.VelocityX = 0;
+                    break;
+            }
+        }
+    }
+
+    public enum CollisionType
+    {
+        None,
+        Top,
+        Bottom,
+        Side
     }
 }

@@ -10,6 +10,8 @@ namespace GameApp.Core.Models
         private double _velocityY;
         private bool _isOnGround;
         private bool _isFacingRight = true;
+        private double _width = 50; 
+        private double _height = 100;
 
         public double X
         {
@@ -46,5 +48,23 @@ namespace GameApp.Core.Models
             get => _isFacingRight;
             set => this.RaiseAndSetIfChanged(ref _isFacingRight, value);
         }
+
+        public double Width
+        {
+            get => _width;
+            set => this.RaiseAndSetIfChanged(ref _width, value);
+        }
+
+        public double Height
+        {
+            get => _height;
+            set => this.RaiseAndSetIfChanged(ref _height, value);
+        }
+
+        // Вспомогательные свойства для коллизий
+        public double Right => X + Width;
+        public double Bottom => Y + Height;
+        public double CenterX => X + Width / 2;
+        public double CenterY => Y + Height / 2;
     }
 }
