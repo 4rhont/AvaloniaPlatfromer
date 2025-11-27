@@ -1,6 +1,7 @@
-using Avalonia.Controls;
+п»їusing Avalonia.Controls;
 using Avalonia.Interactivity;
 using GameApp.Core.ViewModels;
+using GameApp.ViewModels;
 
 namespace GameApp.Views
 {
@@ -13,16 +14,9 @@ namespace GameApp.Views
 
         private void StartGame_Click(object sender, RoutedEventArgs e)
         {
-            var gameView = new GameView
-            {
-                DataContext = new GameViewModel()
-            };
-            gameView.Closed += (s, args) =>
-            {
-                // Освобождаем ресурсы при закрытии окна
-                if (gameView.DataContext is GameViewModel viewModel)
-                    viewModel.Dispose();
-            };
+            var gameVM = new GameViewModel();
+            var gameView = new GameView(gameVM);
+            gameView.Closed += (s, args) => gameVM.Dispose();
             gameView.Show();
             this.Close();
         }

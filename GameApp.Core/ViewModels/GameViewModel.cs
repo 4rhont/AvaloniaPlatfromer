@@ -90,8 +90,8 @@ namespace GameApp.Core.ViewModels
             if (_player.Y > 2000) // ПОКА ЧТО КОНСТАНТА ПОТОМ ПОМЕНЯТЬ
             {
                 // Респавн игрока - возвращаем в начальную позицию
-                _player.X = 100;
-                _player.Y = 100;
+                _player.X = 200;
+                _player.Y = 700;
                 _player.VelocityX = 0;
                 _player.VelocityY = 0;
 

@@ -1,49 +1,44 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="clr-namespace:GameApp.Core.ViewModels;assembly=GameApp.Core"
-        x:Class="GameApp.Views.GameView"
-        Title="Platformer - Textures"
-        Width="1920" Height="1080"
-        Focusable="True">
-    
-    <Design.DataContext>
-        <vm:GameViewModel />
-    </Design.DataContext>
+        xmlns:vm="clr-namespace:GameApp.ViewModels;assembly=GameApp"
+	x:Class="GameApp.Views.GameView"
+	x:DataType="vm:PlayerAnimationViewModel"
+	Title="Platformer - Textures"
+	Width="1920" Height="1080"
+	Focusable="True">
 
-    <Canvas x:Name="MainCanvas" Background="LightBlue" x:DataType="vm:GameViewModel">
-        <!-- Визуальные ориентиры -->
-        <Rectangle Canvas.Left="0" Canvas.Top="0" 
-                   Width="1920" Height="1080" 
-                   Fill="Transparent" 
-                   Stroke="Gray" 
+	<Canvas x:Name="MainCanvas" Background="LightBlue">
+
+		<Rectangle Canvas.Left="0" Canvas.Top="0"
+                   Width="1920" Height="1080"
+                   Fill="Transparent"
+                   Stroke="Gray"
                    StrokeThickness="1"
                    StrokeDashArray="5,5"/>
-        
-        <!-- Игрок с текстурой -->
-        <Image x:Name="PlayerImage"
-               Width="{Binding Player.Width}" 
-               Height="{Binding Player.Height}" 
-               Canvas.Left="{Binding PlayerX}"
-               Canvas.Top="{Binding PlayerY}"
-               Source="/Assets/man.png"/>
-        
-        <!-- Отладочная информация -->
-        <TextBlock Canvas.Left="10" Canvas.Top="10" 
-                   Text="{Binding PlayerX, StringFormat='X: {0:F1}'}" 
+
+		<Image x:Name="PlayerImage"
+               Width="150"
+               Height="150"
+               Canvas.Left="{Binding X}"
+               Canvas.Top="{Binding Y}"
+               Source="{Binding CurrentFrameBitmap}"/>
+
+		<TextBlock Canvas.Left="10" Canvas.Top="10"
+                   Text="{Binding X, StringFormat='X: {0:F1}'}"
                    Foreground="Black" FontSize="16"/>
-        <TextBlock Canvas.Left="10" Canvas.Top="40" 
-                   Text="{Binding PlayerY, StringFormat='Y: {0:F1}'}" 
+		<TextBlock Canvas.Left="10" Canvas.Top="40"
+                   Text="{Binding Y, StringFormat='Y: {0:F1}'}"
                    Foreground="Black" FontSize="16"/>
-        <TextBlock Canvas.Left="10" Canvas.Top="70" 
-                   Text="{Binding Player.IsOnGround, StringFormat='On Ground: {0}'}" 
+		<TextBlock Canvas.Left="10" Canvas.Top="70"
+                   Text="{Binding IsOnGround, StringFormat='On Ground: {0}'}"
                    Foreground="Black" FontSize="16"/>
-        <TextBlock Canvas.Left="10" Canvas.Top="100" 
-                   Text="Platforms from code" 
+		<TextBlock Canvas.Left="10" Canvas.Top="100"
+                   Text="Platforms from code"
                    Foreground="DarkGreen" FontSize="16" FontWeight="Bold"/>
-        
-        <!-- Подсказка по управлению -->
-        <TextBlock Canvas.Left="10" Canvas.Top="1040" 
-                   Text="Controls: WASD or arrows, Space to jump" 
+
+		<!-- Подсказка по управлению -->
+		<TextBlock Canvas.Left="10" Canvas.Top="1040"
+                   Text="Controls: WASD or arrows, Space to jump"
                    Foreground="Black" FontSize="14"/>
-    </Canvas>
+	</Canvas>
 </Window>
