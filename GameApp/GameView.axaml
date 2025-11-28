@@ -1,12 +1,15 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:GameApp.ViewModels;assembly=GameApp"
-	x:Class="GameApp.Views.GameView"
-	x:DataType="vm:PlayerAnimationViewModel"
-	Title="Platformer - Textures"
-	Width="1920" Height="1080"
-	Focusable="True">
-
+		xmlns:converters="clr-namespace:GameApp.Converters"
+	    x:Class="GameApp.Views.GameView"
+	    x:DataType="vm:PlayerAnimationViewModel"
+	    Title="Platformer - Textures"
+	    Width="1920" Height="1080"
+	    Focusable="True">
+	<Window.Resources>
+		<converters:BoolToScaleXConverter x:Key="BoolToScaleConverter"/>
+	</Window.Resources>
 	<Canvas x:Name="MainCanvas" Background="LightBlue">
 
 		<Rectangle Canvas.Left="0" Canvas.Top="0"
@@ -17,11 +20,17 @@
                    StrokeDashArray="5,5"/>
 
 		<Image x:Name="PlayerImage"
-               Width="150"
-               Height="150"
-               Canvas.Left="{Binding X}"
-               Canvas.Top="{Binding Y}"
-               Source="{Binding CurrentFrameBitmap}"/>
+       Width="150"
+       Height="150"
+       Canvas.Left="{Binding X}"
+       Canvas.Top="{Binding Y}"
+       Source="{Binding CurrentFrameBitmap}"
+       RenderTransformOrigin="50%,50%">
+			<Image.RenderTransform>
+				<ScaleTransform ScaleX="{Binding IsFacingRight, Converter={StaticResource BoolToScaleConverter}}"
+								ScaleY="1"/>
+			</Image.RenderTransform>
+		</Image>
 
 		<TextBlock Canvas.Left="10" Canvas.Top="10"
                    Text="{Binding X, StringFormat='X: {0:F1}'}"
@@ -36,7 +45,7 @@
                    Text="Platforms from code"
                    Foreground="DarkGreen" FontSize="16" FontWeight="Bold"/>
 
-		<!-- Подсказка по управлению -->
+		<!-- РџРѕРґСЃРєР°Р·РєР° РїРѕ СѓРїСЂР°РІР»РµРЅРёСЋ -->
 		<TextBlock Canvas.Left="10" Canvas.Top="1040"
                    Text="Controls: WASD or arrows, Space to jump"
                    Foreground="Black" FontSize="14"/>

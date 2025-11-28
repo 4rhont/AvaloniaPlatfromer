@@ -16,12 +16,12 @@ namespace GameApp.Views
 {
     public partial class GameView : Window
     {
-        private readonly GameViewModel _gameVM;                    // ← храним ссылку на GameViewModel
-        private readonly PlayerAnimationViewModel _animationVM;    // ← и на анимацию
+        private readonly GameViewModel _gameVM;
+        private readonly PlayerAnimationViewModel _animationVM;
         private readonly List<Control> _platformVisuals = new();
         private Bitmap? _platformTexture;
 
-        // ← Новый конструктор с параметром
+
         public GameView(GameViewModel gameVM)
         {
             _gameVM = gameVM;
@@ -29,11 +29,11 @@ namespace GameApp.Views
 
             InitializeComponent();
 
-            // Устанавливаем DataContext на анимацию (для биндингов X, Y, CurrentFrameBitmap)
+            // DataContext на анимацию
             DataContext = _animationVM;
 
             LoadPlatformTexture();
-            CreatePlatforms(); // создаём платформы сразу
+            CreatePlatforms();
 
             Focusable = true;
             AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
