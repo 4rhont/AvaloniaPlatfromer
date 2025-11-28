@@ -134,7 +134,6 @@ namespace GameApp.Core.ViewModels
             }
         }
 
-        // ... остальные методы (ApplyFriction, UpdatePosition, CheckGroundCollision) остаются без изменений
         private void ApplyFriction(double deltaTime)
         {
             if (_player.IsOnGround)
@@ -162,20 +161,40 @@ namespace GameApp.Core.ViewModels
             _player.Y += _player.VelocityY * deltaTime;
         }
 
-        // GameViewModel.cs - метод CheckGroundCollision
         private void CheckGroundCollision()
         {
-            _player.IsOnGround = false;
-
-            foreach (var platform in _platforms)
+            foreach (var p in _platforms)
             {
-                if (PhysicsService.CheckCollision(_player, platform))
+                if (PhysicsService.CheckCollision(_player, p))
                 {
-                    var collisionType = PhysicsService.GetCollisionType(_player, platform);
-                    PhysicsService.ResolveCollision(_player, platform, collisionType);
+                    var col = PhysicsService.GetCollisionType(_player, p);
+                    PhysicsService.ResolveCollision(_player, p, col);
                 }
             }
+
+            double feetX = _player.X + _player.Width / 2;
+            double feetY = _player.Y + _player.Height;
+
+            bool grounded = false;
+
+            foreach (var p in _platforms)
+            {
+                bool withinX = feetX >= p.X && feetX <= p.X + p.Width;
+
+                if (!withinX) continue;
+
+                if (feetY >= p.Y - 3 && feetY <= p.Y + 3 && _player.VelocityY >= 0)
+                {
+                    grounded = true;
+                    break;
+                }
+            }
+
+            _player.IsOnGround = grounded;
         }
+
+
+
 
         public void Dispose()
         {

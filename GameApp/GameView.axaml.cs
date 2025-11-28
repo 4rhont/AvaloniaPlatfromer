@@ -57,35 +57,71 @@ namespace GameApp.Views
 
         private void CreatePlatforms()
         {
+            // очистка старых платформ
             foreach (var visual in _platformVisuals)
                 MainCanvas.Children.Remove(visual);
             _platformVisuals.Clear();
 
             foreach (var platform in _gameVM.Platforms)
             {
-                Control visual = _platformTexture != null
-                    ? new Image
-                    {
-                        Width = platform.Width,
-                        Height = platform.Height,
-                        Source = _platformTexture,
-                        Stretch = Stretch.Fill
-                    }
-                    : new Avalonia.Controls.Shapes.Rectangle
-                    {
-                        Width = platform.Width,
-                        Height = platform.Height,
-                        Fill = new SolidColorBrush(Colors.Green),
-                        Stroke = new SolidColorBrush(Colors.DarkGreen),
-                        StrokeThickness = 2
-                    };
+                if (_platformTexture == null)
+                {
+                    AddRectanglePlatform(platform);
+                    continue;
+                }
 
-                Canvas.SetLeft(visual, platform.X);
-                Canvas.SetTop(visual, platform.Y);
-                MainCanvas.Children.Add(visual);
-                _platformVisuals.Add(visual);
+                // заполнение через дублирование и обрезание текстуры
+                double tileW = _platformTexture.PixelSize.Width;
+                double tileH = _platformTexture.PixelSize.Height;
+
+                int tilesX = (int)Math.Ceiling(platform.Width / tileW);
+                int tilesY = (int)Math.Ceiling(platform.Height / tileH);
+
+                for (int x = 0; x < tilesX; x++)
+                {
+                    for (int y = 0; y < tilesY; y++)
+                    {
+                        double w = Math.Min(tileW, platform.Width - x * tileW);
+                        double h = Math.Min(tileH, platform.Height - y * tileH);
+
+                        AddTile(platform.X + x * tileW, platform.Y + y * tileH, w, h);
+                    }
+                }
             }
         }
+
+        //создание "обрезков" текстуры
+        private void AddTile(double left, double top, double width, double height)
+        {
+            var tile = new Image
+            {
+                Source = _platformTexture,
+                Width = width,
+                Height = height,
+                Stretch = Stretch.None
+            };
+            Canvas.SetLeft(tile, left);
+            Canvas.SetTop(tile, top);
+            MainCanvas.Children.Add(tile);
+            _platformVisuals.Add(tile);
+        }
+
+        private void AddRectanglePlatform(Platform platform)
+        {
+            var rect = new Avalonia.Controls.Shapes.Rectangle
+            {
+                Width = platform.Width,
+                Height = platform.Height,
+                Fill = new SolidColorBrush(Colors.Green), //зеленая заглушка для платформы, если нет текстуру
+                Stroke = new SolidColorBrush(Colors.DarkGreen),
+                StrokeThickness = 2
+            };
+            Canvas.SetLeft(rect, platform.X);
+            Canvas.SetTop(rect, platform.Y);
+            MainCanvas.Children.Add(rect);
+            _platformVisuals.Add(rect);
+        }
+
 
         private void OnKeyDown(object? sender, KeyEventArgs e)
         {
