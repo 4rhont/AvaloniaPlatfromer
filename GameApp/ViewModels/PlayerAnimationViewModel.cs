@@ -12,7 +12,9 @@ namespace GameApp.ViewModels
     {
         private readonly Player _player;
         private readonly Bitmap[] _frames;
+        private readonly Bitmap[] _idleFrames;
         private int _currentFrame = 0;
+        private int _currentIdleFrame = 0;
         private readonly DispatcherTimer _timer;
 
         [ObservableProperty]
@@ -24,6 +26,9 @@ namespace GameApp.ViewModels
         public double X => _player.X;
         public double Y => _player.Y;
         public bool IsOnGround => _player.IsOnGround;
+        public double Width => _player.Width;
+        public double Height => _player.Height;
+
 
         public PlayerAnimationViewModel(Player player)
         {
@@ -33,10 +38,16 @@ namespace GameApp.ViewModels
 
             for (int i = 0; i < _frames.Length; i++)
             {
-                var uri = new Uri($"avares://GameApp/Assets/Player/hero_spritesheet_0{i + 2}.png");
+                var uri = new Uri($"avares://GameApp/Assets/Player/hero_spritesheet_0{i + 2}.png"); // поправить имена файлов и смещение по i
                 _frames[i] = new Bitmap(AssetLoader.Open(uri));
             }
 
+            _idleFrames = new Bitmap[2];
+            for (int i = 0; i < _idleFrames.Length; i++)
+            {
+                var uri = new Uri($"avares://GameApp/Assets/Player/hero_spritesheet_0{i + 2}.png"); // поправить имена файлов и смещение по i
+                _idleFrames[i] = new Bitmap(AssetLoader.Open(uri));
+            }
 
             CurrentFrameBitmap = _frames[0];
             IsFacingRight = _player.IsFacingRight;
@@ -57,19 +68,25 @@ namespace GameApp.ViewModels
 
         private void Animate()
         {
-            // Анимация только если игрок движется по горизонтали и стоит на земле
             if (_player.IsOnGround && Math.Abs(_player.VelocityX) > 0.1)
             {
+                // анимация движения
                 _currentFrame = (_currentFrame + 1) % _frames.Length;
                 CurrentFrameBitmap = _frames[_currentFrame];
             }
+            else if (_player.IsOnGround)
+            {
+                // анимация покоя
+                _currentIdleFrame = (_currentIdleFrame + 1) % _idleFrames.Length;
+                CurrentFrameBitmap = _idleFrames[_currentIdleFrame];
+            }
             else
             {
-                // Стоячий кадр (можно сделать первый кадр)
+                // прыжок или падение (в разработке)
                 CurrentFrameBitmap = _frames[0];
             }
 
-            // Отзеркаливание
+            // отзеркаливание
             IsFacingRight = _player.IsFacingRight;
         }
     }

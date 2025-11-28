@@ -13,23 +13,24 @@
 	<Canvas x:Name="MainCanvas" Background="LightBlue">
 
 		<Rectangle Canvas.Left="0" Canvas.Top="0"
-                   Width="1920" Height="1080"
-                   Fill="Transparent"
-                   Stroke="Gray"
-                   StrokeThickness="1"
-                   StrokeDashArray="5,5"/>
+					Width="1920" Height="1080"
+					Fill="Transparent"
+					Stroke="Gray"
+					StrokeThickness="1"
+					StrokeDashArray="5,5"/>
 
 		<Image x:Name="PlayerImage"
-       Width="150"
-       Height="150"
-       Canvas.Left="{Binding X}"
-       Canvas.Top="{Binding Y}"
-       Source="{Binding CurrentFrameBitmap}"
-       RenderTransformOrigin="50%,50%">
-			<Image.RenderTransform>
-				<ScaleTransform ScaleX="{Binding IsFacingRight, Converter={StaticResource BoolToScaleConverter}}"
-								ScaleY="1"/>
-			</Image.RenderTransform>
+		   Width="{Binding Width}"
+		   Height="{Binding Height}"
+		   Canvas.Left="{Binding X}"
+		   Canvas.Top="{Binding Y}"
+		   Stretch="Fill"
+		   Source="{Binding CurrentFrameBitmap}"
+		   RenderTransformOrigin="50%,50%">
+				<Image.RenderTransform>
+					<ScaleTransform ScaleX="{Binding IsFacingRight, Converter={StaticResource BoolToScaleConverter}}"
+									ScaleY="1"/>
+				</Image.RenderTransform>
 		</Image>
 
 		<TextBlock Canvas.Left="10" Canvas.Top="10"

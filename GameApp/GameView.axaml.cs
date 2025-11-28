@@ -8,7 +8,7 @@ using Avalonia.Platform;
 using GameApp.Core.Input;
 using GameApp.Core.Models;
 using GameApp.Core.ViewModels;
-using GameApp.ViewModels; // ← добавь этот using!
+using GameApp.ViewModels;
 using System;
 using System.Collections.Generic;
 
@@ -29,7 +29,7 @@ namespace GameApp.Views
 
             InitializeComponent();
 
-            // DataContext на анимацию
+
             DataContext = _animationVM;
 
             LoadPlatformTexture();
