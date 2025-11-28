@@ -34,18 +34,18 @@ namespace GameApp.ViewModels
         {
             _player = player;
 
-            _frames = new Bitmap[7];
+            _frames = new Bitmap[5];
 
             for (int i = 0; i < _frames.Length; i++)
             {
-                var uri = new Uri($"avares://GameApp/Assets/Player/hero_spritesheet_0{i + 2}.png"); // поправить имена файлов и смещение по i
+                var uri = new Uri($"avares://GameApp/Assets/Player/player_walk_0{i + 1}.png"); // поправить имена файлов и смещение по i
                 _frames[i] = new Bitmap(AssetLoader.Open(uri));
             }
 
-            _idleFrames = new Bitmap[2];
+            _idleFrames = new Bitmap[4];
             for (int i = 0; i < _idleFrames.Length; i++)
             {
-                var uri = new Uri($"avares://GameApp/Assets/Player/hero_spritesheet_0{i + 2}.png"); // поправить имена файлов и смещение по i
+                var uri = new Uri($"avares://GameApp/Assets/Player/player_idle_0{i + 1}.png"); // поправить имена файлов и смещение по i
                 _idleFrames[i] = new Bitmap(AssetLoader.Open(uri));
             }
 

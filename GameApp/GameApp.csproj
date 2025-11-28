@@ -34,7 +34,8 @@
     <Folder Include="Models\" />
   </ItemGroup>
 
-  <ItemGroup>
+
+	<ItemGroup>
     <AvaloniaResource Update="Assets\platform.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </AvaloniaResource>

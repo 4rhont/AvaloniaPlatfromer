@@ -39,12 +39,12 @@ namespace GameApp.Core.ViewModels
         private void InitializePlatforms()
         {
             
-            _platforms.Add(new Platform(0, 800, 1000, 20));
+            _platforms.Add(new Platform(0, 800, 1000, 100));
 
             _platforms.Add(new Platform(500, 300, 100, 20));
 
             // Еще одна тестовая платформа
-            _platforms.Add(new Platform(200, 500, 150, 20));
+            _platforms.Add(new Platform(200, 450, 150, 20));
 
             // Убрали все остальные платформы для тестирования
             // _platforms.Add(new Platform(0, 500, 2000, 20));

@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:GameApp.ViewModels;assembly=GameApp"
 		xmlns:converters="clr-namespace:GameApp.Converters"
+		xmlns:views="clr-namespace:GameApp.Views"
 	    x:Class="GameApp.Views.GameView"
 	    x:DataType="vm:PlayerAnimationViewModel"
 	    Title="Platformer - Textures"
@@ -10,7 +11,7 @@
 	<Window.Resources>
 		<converters:BoolToScaleXConverter x:Key="BoolToScaleConverter"/>
 	</Window.Resources>
-	<Canvas x:Name="MainCanvas" Background="LightBlue">
+	<Canvas x:Name="MainCanvas" Background="DarkBlue">
 
 		<Rectangle Canvas.Left="0" Canvas.Top="0"
 					Width="1920" Height="1080"
@@ -45,7 +46,9 @@
 		<TextBlock Canvas.Left="10" Canvas.Top="100"
                    Text="Platforms from code"
                    Foreground="DarkGreen" FontSize="16" FontWeight="Bold"/>
-
+		<!-- Погода -->
+		<views:WeatherLayer Canvas.Left="0" Canvas.Top="0"
+                        Width="1920" Height="1080"/>
 		<!-- Подсказка по управлению -->
 		<TextBlock Canvas.Left="10" Canvas.Top="1040"
                    Text="Controls: WASD or arrows, Space to jump"
