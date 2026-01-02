@@ -5,10 +5,12 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia.Threading;
 using GameApp.Core.Input;
 using GameApp.Core.Models;
 using GameApp.Core.ViewModels;
 using GameApp.ViewModels;
+using ReactiveUI;
 using System;
 using System.Collections.Generic;
 
@@ -21,6 +23,55 @@ namespace GameApp.Views
         private readonly List<Control> _platformVisuals = new();
         private Bitmap? _platformTexture;
 
+        private readonly List<Control> _debugPlatformRects = new();
+        private Avalonia.Controls.Shapes.Rectangle? _debugPlayerRect;
+
+        private void DrawDebugPlatforms()
+        {
+            foreach (var r in _debugPlatformRects)
+                DebugCanvas.Children.Remove(r);
+
+            _debugPlatformRects.Clear();
+
+            foreach (var p in _gameVM.Platforms)
+            {
+                var rect = new Avalonia.Controls.Shapes.Rectangle
+                {
+                    Width = p.Width,
+                    Height = p.Height,
+                    Stroke = new SolidColorBrush(Colors.Red),
+                    StrokeThickness = 2,
+                    Fill = null
+                };
+
+                Canvas.SetLeft(rect, p.X);
+                Canvas.SetTop(rect, p.Y);
+
+                DebugCanvas.Children.Add(rect);
+                _debugPlatformRects.Add(rect);
+            }
+        }
+
+        private void DrawDebugPlayer()
+        {
+            if (_debugPlayerRect == null)
+            {
+                _debugPlayerRect = new Avalonia.Controls.Shapes.Rectangle
+                {
+                    Stroke = new SolidColorBrush(Colors.Lime),
+                    StrokeThickness = 2,
+                    Fill = null
+                };
+                DebugCanvas.Children.Add(_debugPlayerRect);
+            }
+
+            _debugPlayerRect.Width = _gameVM.Player.Width;
+            _debugPlayerRect.Height = _gameVM.Player.Height;
+
+            Canvas.SetLeft(_debugPlayerRect, _gameVM.Player.X);
+            Canvas.SetTop(_debugPlayerRect, _gameVM.Player.Y);
+        }
+
 
         public GameView(GameViewModel gameVM)
         {
@@ -28,6 +79,19 @@ namespace GameApp.Views
             _animationVM = new PlayerAnimationViewModel(gameVM.Player);
 
             InitializeComponent();
+
+            if (_gameVM.IsDebugMode)
+            {
+                _gameVM.WhenAnyValue(vm => vm.PlayerX, vm => vm.PlayerY)
+                    .Subscribe(_ =>
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            DrawDebugPlatforms();
+                            DrawDebugPlayer();
+                        });
+                    });
+            }
 
             PlayerImage.DataContext = _animationVM;
             DataContext = _gameVM;

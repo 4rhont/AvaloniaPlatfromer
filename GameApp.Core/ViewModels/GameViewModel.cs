@@ -18,6 +18,7 @@ namespace GameApp.Core.ViewModels
 
         private string _currentLevelId = "level1";
         private const bool DebugMode = true;
+        public bool IsDebugMode => DebugMode;
         private string _debugInfo = "";
 
         // FPS

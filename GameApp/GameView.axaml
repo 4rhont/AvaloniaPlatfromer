@@ -52,5 +52,9 @@
 		<TextBlock Canvas.Left="10" Canvas.Top="1040"
                    Text="Controls: WASD or arrows, Space to jump"
                    Foreground="Black" FontSize="14"/>
+
+		<Canvas x:Name="DebugCanvas"
+		  Canvas.ZIndex="1000"
+        IsHitTestVisible="False"/>
 	</Canvas>
 </Window>
