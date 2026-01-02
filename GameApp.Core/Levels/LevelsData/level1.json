@@ -1,0 +1,26 @@
+﻿{
+  "id": "level1",
+  "playerStartX": 200,
+  "playerStartY": 700,
+  "platforms":
+  [
+    {
+      "x": 0,
+      "y": 800,
+      "width": 1000,
+      "height": 100
+    },
+    {
+      "x": 500,
+      "y": 300,
+      "width": 100,
+      "height": 20
+    },
+    {
+      "x": 200,
+      "y": 450,
+      "width": 150,
+      "height": 20
+    }
+  ]
+}

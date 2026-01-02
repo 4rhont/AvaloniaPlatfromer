@@ -11,4 +11,10 @@
     <PackageReference Include="ReactiveUI" Version="22.2.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Levels\LevelsData\level1.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
