@@ -29,8 +29,8 @@ namespace GameApp.Views
 
             InitializeComponent();
 
-
-            DataContext = _animationVM;
+            PlayerImage.DataContext = _animationVM;
+            DataContext = _gameVM;
 
             LoadPlatformTexture();
             CreatePlatforms();

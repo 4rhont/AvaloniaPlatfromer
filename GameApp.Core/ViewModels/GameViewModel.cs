@@ -15,7 +15,69 @@ namespace GameApp.Core.ViewModels
 
     public class GameViewModel : ReactiveObject, IDisposable
     {
+
         private string _currentLevelId = "level1";
+        private const bool DebugMode = true;
+        private string _debugInfo = "";
+
+        // FPS
+        private int _frameCounter = 0;
+        private double _fps = 0;
+        private double _fpsTimer = 0;
+
+        // Настройки фыпысы
+        private const double FpsUpdateInterval = 0.5; // секунд
+
+        private void UpdateFps(double deltaTime)
+        {
+            _frameCounter++;
+            _fpsTimer += deltaTime;
+
+            if (_fpsTimer >= FpsUpdateInterval)
+            {
+                _fps = _frameCounter / _fpsTimer;
+                _frameCounter = 0;
+                _fpsTimer = 0;
+            }
+        }
+
+
+        public string DebugInfo
+        {
+            get => _debugInfo;
+            private set => this.RaiseAndSetIfChanged(ref _debugInfo, value);
+        }
+
+        private void UpdateDebugInfo()
+        {
+            if (!DebugMode)
+                return;
+
+            var lines = new List<string>();
+
+            lines.Add($"LEVEL: {_currentLevelId}");
+            lines.Add($"PLATFORMS COUNT: {_platforms.Count}");
+            lines.Add("");
+
+            int index = 0;
+            foreach (var p in _platforms)
+            {
+                lines.Add(
+                    $"[{index}] X:{p.X} Y:{p.Y} W:{p.Width} H:{p.Height}"
+                );
+                index++;
+            }
+
+            lines.Add("");
+            lines.Add($"PLAYER X:{_player.X:F1} Y:{_player.Y:F1}");
+            lines.Add($"ON GROUND: {_player.IsOnGround}");
+            lines.Add($"VEL X:{_player.VelocityX:F1} Y:{_player.VelocityY:F1}");
+            lines.Add($"FPS: {_fps:F1}");
+            lines.Add("");
+
+            DebugInfo = string.Join(Environment.NewLine, lines);
+        }
+
         public string CurrentLevelId => _currentLevelId;
 
         private readonly Player _player = new();
@@ -95,6 +157,12 @@ namespace GameApp.Core.ViewModels
         {
             var deltaTime = CalculateDeltaTime();
             UpdatePhysics(deltaTime);
+
+            if (DebugMode)
+            {
+                UpdateFps(deltaTime);
+                UpdateDebugInfo();
+            }
         }
 
         private double CalculateDeltaTime()

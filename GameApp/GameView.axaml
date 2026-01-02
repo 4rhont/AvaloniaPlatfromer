@@ -1,10 +1,11 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="clr-namespace:GameApp.ViewModels;assembly=GameApp"
+        xmlns:vm="clr-namespace:GameApp.Core.ViewModels;assembly=GameApp.Core"
 		xmlns:converters="clr-namespace:GameApp.Converters"
 		xmlns:views="clr-namespace:GameApp.Views"
+		xmlns:vmAnim="clr-namespace:GameApp.ViewModels;assembly=GameApp"
 	    x:Class="GameApp.Views.GameView"
-	    x:DataType="vm:PlayerAnimationViewModel"
+	    x:DataType="vm:GameViewModel"
 	    Title="Platformer - Textures"
 	    Width="1920" Height="1080"
 	    Focusable="True">
@@ -21,31 +22,29 @@
 					StrokeDashArray="5,5"/>
 
 		<Image x:Name="PlayerImage"
-		   Width="{Binding Width}"
-		   Height="{Binding Height}"
-		   Canvas.Left="{Binding X}"
-		   Canvas.Top="{Binding Y}"
-		   Stretch="Fill"
-		   Source="{Binding CurrentFrameBitmap}"
-		   RenderTransformOrigin="50%,50%">
+			   x:DataType="vmAnim:PlayerAnimationViewModel"
+			   Width="{Binding Width}"
+			   Height="{Binding Height}"
+			   Canvas.Left="{Binding X}"
+			   Canvas.Top="{Binding Y}"
+			   Stretch="Fill"
+			   Source="{Binding CurrentFrameBitmap}"
+			   RenderTransformOrigin="50%,50%">
+
 				<Image.RenderTransform>
 					<ScaleTransform ScaleX="{Binding IsFacingRight, Converter={StaticResource BoolToScaleConverter}}"
 									ScaleY="1"/>
 				</Image.RenderTransform>
 		</Image>
 
-		<TextBlock Canvas.Left="10" Canvas.Top="10"
-                   Text="{Binding X, StringFormat='X: {0:F1}'}"
-                   Foreground="Black" FontSize="16"/>
-		<TextBlock Canvas.Left="10" Canvas.Top="40"
-                   Text="{Binding Y, StringFormat='Y: {0:F1}'}"
-                   Foreground="Black" FontSize="16"/>
-		<TextBlock Canvas.Left="10" Canvas.Top="70"
-                   Text="{Binding IsOnGround, StringFormat='On Ground: {0}'}"
-                   Foreground="Black" FontSize="16"/>
-		<TextBlock Canvas.Left="10" Canvas.Top="100"
-                   Text="Platforms from code"
-                   Foreground="DarkGreen" FontSize="16" FontWeight="Bold"/>
+		<TextBlock
+    Canvas.Left="10"
+    Canvas.Top="10"
+    Width="500"
+    Text="{Binding DebugInfo}"
+    Foreground="Black"
+    FontSize="14"
+    TextWrapping="Wrap"/>
 		<!-- Погода -->
 		<views:WeatherLayer Canvas.Left="0" Canvas.Top="0"
                         Width="1920" Height="1080"/>
