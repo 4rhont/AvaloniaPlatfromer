@@ -20,35 +20,37 @@ namespace GameApp.Views
     {
         private readonly GameViewModel _gameVM;
         private readonly PlayerAnimationViewModel _animationVM;
+
+
         private readonly List<Control> _platformVisuals = new();
         private Bitmap? _platformTexture;
 
         private readonly List<Control> _debugPlatformRects = new();
         private Avalonia.Controls.Shapes.Rectangle? _debugPlayerRect;
 
+        private DispatcherTimer _gameTimer;
+
         private void DrawDebugPlatforms()
         {
-            foreach (var r in _debugPlatformRects)
-                DebugCanvas.Children.Remove(r);
-
-            _debugPlatformRects.Clear();
-
-            foreach (var p in _gameVM.Platforms)
+            if (_debugPlatformRects.Count == 0)
             {
-                var rect = new Avalonia.Controls.Shapes.Rectangle
+                foreach (var p in _gameVM.Platforms)
                 {
-                    Width = p.Width,
-                    Height = p.Height,
-                    Stroke = new SolidColorBrush(Colors.Red),
-                    StrokeThickness = 2,
-                    Fill = null
-                };
+                    var rect = new Avalonia.Controls.Shapes.Rectangle
+                    {
+                        Width = p.Width,
+                        Height = p.Height,
+                        Stroke = new SolidColorBrush(Colors.Red),
+                        StrokeThickness = 2,
+                        Fill = null
+                    };
 
-                Canvas.SetLeft(rect, p.X);
-                Canvas.SetTop(rect, p.Y);
+                    Canvas.SetLeft(rect, p.X);
+                    Canvas.SetTop(rect, p.Y);
 
-                DebugCanvas.Children.Add(rect);
-                _debugPlatformRects.Add(rect);
+                    DebugCanvas.Children.Add(rect);
+                    _debugPlatformRects.Add(rect);
+                }
             }
         }
 
@@ -81,7 +83,8 @@ namespace GameApp.Views
             InitializeComponent();
 
             MainCanvas.RenderTransform = new TranslateTransform();
-            //подписываемся на изменение камеры
+
+            // Подписка на камеру (без изменений)
             _gameVM.Camera.WhenAnyValue(c => c.X, c => c.Y)
                 .Subscribe(_ =>
                 {
@@ -90,11 +93,6 @@ namespace GameApp.Views
                         var transform = (TranslateTransform)MainCanvas.RenderTransform!;
                         transform.X = -_gameVM.Camera.X;
                         transform.Y = -_gameVM.Camera.Y;
-
-                        // Пересоздаем платформы при движении камеры (для culling)
-                        CreatePlatforms();
-
-                        // Debug обновляется автоматически, т.к. rect'ы на Canvas и сдвигаются transform'ом
                     });
                 });
 
@@ -105,7 +103,6 @@ namespace GameApp.Views
                     {
                         Dispatcher.UIThread.Post(() =>
                         {
-                            DrawDebugPlatforms();
                             DrawDebugPlayer();
                         });
                     });
@@ -117,12 +114,27 @@ namespace GameApp.Views
             LoadPlatformTexture();
             CreatePlatforms();
 
+            if (_gameVM.IsDebugMode)
+            {
+                DrawDebugPlatforms();
+                DrawDebugPlayer();
+            }
+
             Focusable = true;
             AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
             AddHandler(KeyUpEvent, OnKeyUp, RoutingStrategies.Tunnel);
             Activated += (_, __) => Focus();
+
+            // Новый game loop с DispatcherTimer
+            _gameTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(1000.0 / 120.0),  // TIMER
+            };
+            _gameTimer.Tick += (sender, e) => _gameVM.UpdateGame();
+            _gameTimer.Start();
         }
 
+        
         private void LoadPlatformTexture()
         {
             try
@@ -139,30 +151,17 @@ namespace GameApp.Views
 
         private void CreatePlatforms()
         {
-            // очистка старых платформ
-            foreach (var visual in _platformVisuals)
-                MainCanvas.Children.Remove(visual);
-            _platformVisuals.Clear();
-
-            const double cullBuffer = 200;
-            double camLeft = _gameVM.Camera.X - cullBuffer;
-            double camRight = _gameVM.Camera.X + _gameVM.Camera.ViewportWidth + cullBuffer;
-            double camTop = _gameVM.Camera.Y - cullBuffer;
-            double camBottom = _gameVM.Camera.Y + _gameVM.Camera.ViewportHeight + cullBuffer;
+            if (_platformVisuals.Count > 0) return;  // Защита от повторного вызова
 
             foreach (var platform in _gameVM.Platforms)
             {
-                if (platform.Right < camLeft || platform.X > camRight ||
-                    platform.Bottom < camTop || platform.Y > camBottom)
-                    continue;
-
                 if (_platformTexture == null)
                 {
                     AddRectanglePlatform(platform);
                     continue;
                 }
 
-                // заполнение через дублирование и обрезание текстуры
+                // Тайлинг — без изменений, но один раз
                 double tileW = _platformTexture.PixelSize.Width;
                 double tileH = _platformTexture.PixelSize.Height;
 

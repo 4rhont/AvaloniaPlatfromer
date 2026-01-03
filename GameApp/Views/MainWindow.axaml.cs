@@ -16,9 +16,12 @@ namespace GameApp.Views
         {
             var gameVM = new GameViewModel();
             var gameView = new GameView(gameVM);
-            gameView.Closed += (s, args) => gameVM.Dispose();
+            gameView.Closed += (s, args) =>
+            {
+                // gameVM.Dispose();  
+
+            };
             gameView.Show();
-            this.Close();
         }
     }
 }

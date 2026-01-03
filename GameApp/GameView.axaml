@@ -17,7 +17,7 @@
 
     <Grid>
 
-        <!--  МИР двигается камерой -->
+        <!--  Мир двигается камерой -->
         <Canvas x:Name="MainCanvas" Background="DarkBlue">
 
             <Image x:Name="PlayerImage"
@@ -46,7 +46,7 @@
                     IsHitTestVisible="False"/>
         </Canvas>
 
-        <!-- DEBUG OVERLAY не двигается камерой -->
+        <!-- Debug overlay не двигается камерой -->
         <Border
             HorizontalAlignment="Left"
             VerticalAlignment="Top"

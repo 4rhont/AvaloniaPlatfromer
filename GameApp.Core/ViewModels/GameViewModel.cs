@@ -77,6 +77,7 @@ namespace GameApp.Core.ViewModels
             lines.Add($"ON GROUND: {_player.IsOnGround}");
             lines.Add($"VEL X:{_player.VelocityX:F1} Y:{_player.VelocityY:F1}");
             lines.Add($"FPS: {_fps:F1}");
+
             lines.Add("");
             lines.Add($"CAMERA X:{_camera.X:F1} Y:{_camera.Y:F1}");
             lines.Add($"LEVEL SIZE: W:{_camera.LevelWidth} H:{_camera.LevelHeight}");
@@ -89,7 +90,7 @@ namespace GameApp.Core.ViewModels
         private readonly Player _player = new();
         private readonly HashSet<GameAction> _activeActions = new();
         private readonly ObservableCollection<Platform> _platforms = new();
-        private IDisposable _gameLoop;
+        
         private DateTime _lastUpdateTime;
 
         public Player Player => _player;
@@ -105,9 +106,7 @@ namespace GameApp.Core.ViewModels
             LoadLevel(_currentLevelId);
 
             _lastUpdateTime = DateTime.Now;
-            _gameLoop = Observable.Interval(TimeSpan.FromSeconds(1.0 / 60.0))
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(_ => UpdateGame());
+            
         }
 
         private void LoadLevel(string levelId)
@@ -158,21 +157,45 @@ namespace GameApp.Core.ViewModels
         //    // _platforms.Add(new Platform(2000, 0, 50, 600));
         //}
 
-        // Методы для управления действиями (не зависят от Avalonia!)
+        
         public void StartAction(GameAction action) => _activeActions.Add(action);
         public void StopAction(GameAction action) => _activeActions.Remove(action);
 
-        private void UpdateGame()
+        private double _debugTimer;
+
+        private void UpdateDebugInfoThrottled(double deltaTime)
         {
-            var deltaTime = CalculateDeltaTime();
-            UpdatePhysics(deltaTime);
+            _debugTimer += deltaTime;
+            if (_debugTimer < 0.2)
+                return;
+
+            _debugTimer = 0;
+            UpdateDebugInfo();
+        }
+
+        private double _accumulator = 0;
+        private const double FixedDelta = 1.0 / 60.0;
+
+        public void UpdateGame()
+        {
+            var realDelta = CalculateDeltaTime();
+            _accumulator += realDelta;
+
+            int steps = 0;
+            while (_accumulator >= FixedDelta && steps < 5)  // ограничиваем 5 шагов, чтобы избежать deadloop'a
+            {
+                UpdatePhysics(FixedDelta);
+                _accumulator -= FixedDelta;
+                steps++;
+            }
 
             _camera.Follow(_player.X, _player.Y, _player.Width, _player.Height);
 
             if (DebugMode)
             {
-                UpdateFps(deltaTime);
-                UpdateDebugInfo();
+                UpdateFps(realDelta);  // FPS по реальному времени
+                UpdateDebugInfoThrottled(realDelta);
+                //UpdateDebugInfo();
             }
         }
 
@@ -302,13 +325,10 @@ namespace GameApp.Core.ViewModels
 
             _player.IsOnGround = grounded;
         }
-
-
-
-
-        public void Dispose()
+        public void Dispose()  // Должен быть public
         {
-            _gameLoop?.Dispose();
+            // Здесь можно добавить очистку
+            // Пока пустой, _gameLoop удалён
         }
     }
 }
