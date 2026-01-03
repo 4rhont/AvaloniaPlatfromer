@@ -80,6 +80,24 @@ namespace GameApp.Views
 
             InitializeComponent();
 
+            MainCanvas.RenderTransform = new TranslateTransform();
+            //подписываемся на изменение камеры
+            _gameVM.Camera.WhenAnyValue(c => c.X, c => c.Y)
+                .Subscribe(_ =>
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        var transform = (TranslateTransform)MainCanvas.RenderTransform!;
+                        transform.X = -_gameVM.Camera.X;
+                        transform.Y = -_gameVM.Camera.Y;
+
+                        // Пересоздаем платформы при движении камеры (для culling)
+                        CreatePlatforms();
+
+                        // Debug обновляется автоматически, т.к. rect'ы на Canvas и сдвигаются transform'ом
+                    });
+                });
+
             if (_gameVM.IsDebugMode)
             {
                 _gameVM.WhenAnyValue(vm => vm.PlayerX, vm => vm.PlayerY)
@@ -126,8 +144,18 @@ namespace GameApp.Views
                 MainCanvas.Children.Remove(visual);
             _platformVisuals.Clear();
 
+            const double cullBuffer = 200;
+            double camLeft = _gameVM.Camera.X - cullBuffer;
+            double camRight = _gameVM.Camera.X + _gameVM.Camera.ViewportWidth + cullBuffer;
+            double camTop = _gameVM.Camera.Y - cullBuffer;
+            double camBottom = _gameVM.Camera.Y + _gameVM.Camera.ViewportHeight + cullBuffer;
+
             foreach (var platform in _gameVM.Platforms)
             {
+                if (platform.Right < camLeft || platform.X > camRight ||
+                    platform.Bottom < camTop || platform.Y > camBottom)
+                    continue;
+
                 if (_platformTexture == null)
                 {
                     AddRectanglePlatform(platform);

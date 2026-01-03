@@ -21,6 +21,9 @@ namespace GameApp.Core.ViewModels
         public bool IsDebugMode => DebugMode;
         private string _debugInfo = "";
 
+        private readonly Camera _camera = new();
+        public Camera Camera => _camera;
+
         // FPS
         private int _frameCounter = 0;
         private double _fps = 0;
@@ -75,6 +78,8 @@ namespace GameApp.Core.ViewModels
             lines.Add($"VEL X:{_player.VelocityX:F1} Y:{_player.VelocityY:F1}");
             lines.Add($"FPS: {_fps:F1}");
             lines.Add("");
+            lines.Add($"CAMERA X:{_camera.X:F1} Y:{_camera.Y:F1}");
+            lines.Add($"LEVEL SIZE: W:{_camera.LevelWidth} H:{_camera.LevelHeight}");
 
             DebugInfo = string.Join(Environment.NewLine, lines);
         }
@@ -128,6 +133,9 @@ namespace GameApp.Core.ViewModels
             }
 
             _currentLevelId = level.Id;
+
+            _camera.LevelWidth = level.Width;  
+            _camera.LevelHeight = level.Height;
         }
 
         //private void InitializePlatforms()
@@ -158,6 +166,8 @@ namespace GameApp.Core.ViewModels
         {
             var deltaTime = CalculateDeltaTime();
             UpdatePhysics(deltaTime);
+
+            _camera.Follow(_player.X, _player.Y, _player.Width, _player.Height);
 
             if (DebugMode)
             {

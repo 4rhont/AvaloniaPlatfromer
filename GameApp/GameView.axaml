@@ -14,12 +14,12 @@
 	</Window.Resources>
 	<Canvas x:Name="MainCanvas" Background="DarkBlue">
 
-		<Rectangle Canvas.Left="0" Canvas.Top="0"
+		<!--<Rectangle Canvas.Left="0" Canvas.Top="0"
 					Width="1920" Height="1080"
 					Fill="Transparent"
 					Stroke="Gray"
 					StrokeThickness="1"
-					StrokeDashArray="5,5"/>
+					StrokeDashArray="5,5"/>-->
 
 		<Image x:Name="PlayerImage"
 			   x:DataType="vmAnim:PlayerAnimationViewModel"
