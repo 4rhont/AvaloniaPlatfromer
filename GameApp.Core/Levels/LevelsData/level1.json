@@ -1,45 +1,87 @@
 ﻿{
   "id": "level1",
-  "playerStartX": 200,
-  "playerStartY": 1200,
+  "playerStartX": 1000,
+  "playerStartY": 800,
   "width": 10000,
   "height": 3000,
   "platforms": [
     {
       "x": 0,
-      "y": 800,
-      "width": 1000,
-      "height": 100
+      "y": 0,
+      "width": 440,
+      "height": 3000
     },
     {
-      "x": 500,
-      "y": 300,
-      "width": 100,
-      "height": 20
+      "x": 420,
+      "y": 0,
+      "width": 9270,
+      "height": 220
     },
     {
-      "x": 200,
-      "y": 450,
-      "width": 150,
-      "height": 20
+      "x": 9600,
+      "y": 0,
+      "width": 400,
+      "height": 3000
     },
     {
-      "x": 2000,
-      "y": 900,
-      "width": 500,
-      "height": 50
-    },
-    {
-      "x": 5000,
+      "x": 8750,
       "y": 1200,
-      "width": 800,
-      "height": 100
+      "width": 850,
+      "height": 1800
     },
     {
-      "x": 8000,
-      "y": 1500,
-      "width": 1000,
-      "height": 200
+      "x": 2700,
+      "y": 2770,
+      "width": 6110,
+      "height": 230
+    },
+    {
+      "x": 420,
+      "y": 1770,
+      "width": 2300,
+      "height": 1230
+    },
+    {
+      "x": 3060,
+      "y": 1570,
+      "width": 1560,
+      "height": 185
+    },
+    {
+      "x": 3060,
+      "y": 1720,
+      "width": 4640,
+      "height": 220
+    },
+    {
+      "x": 6170,
+      "y": 1503,
+      "width": 1540,
+      "height": 220
+    },
+    {
+      "x": 7460,
+      "y": 1920,
+      "width": 250,
+      "height": 370
+    },
+    {
+      "x": 8200,
+      "y": 1540,
+      "width": 240,
+      "height": 110
+    },
+    {
+      "x": 7660,
+      "y": 1950,
+      "width": 240,
+      "height": 110
+    },
+    {
+      "x": 8200,
+      "y": 2260,
+      "width": 240,
+      "height": 110
     }
   ]
 }
