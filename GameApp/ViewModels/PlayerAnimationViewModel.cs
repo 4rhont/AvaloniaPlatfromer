@@ -36,12 +36,16 @@ namespace GameApp.ViewModels
         public double VisualX => _player.X + VisualOffsetX;  // Позиция спрайта относительно хитбокса
         public double VisualY => _player.Y + VisualOffsetY;
 
-        private double HandOffsetX = 0;
+        private double HandOffsetX = -5;
         private double HandOffsetY = 5;
 
-        private double VisualOffsetX => (_player.Width - VisualWidth) / 2 + HandOffsetX;  // Центрируем по X: отрицательный, если спрайт шире (спрайт начинается левее хитбокса)
-        private double VisualOffsetY => _player.Height - VisualHeight + HandOffsetY;      // Align по bottom по Y: отрицательный, если спрайт выше (спрайт сдвигается вверх, ноги на уровне земли)
+        private double MirrorCorrectionX = 0;
 
+        private double VisualOffsetX => IsFacingRight
+        ? (_player.Width - VisualWidth) / 2 + HandOffsetX
+        : (_player.Width - VisualWidth) / 2 + MirrorCorrectionX + HandOffsetY;  // MirrorCorrectionX - корректировка если сдвигается спрайт при повороте
+
+        private double VisualOffsetY => _player.Height - VisualHeight + HandOffsetY;      
 
         public PlayerAnimationViewModel(Player player)
         {
@@ -72,10 +76,16 @@ namespace GameApp.ViewModels
             // Автоматически обновляем позицию и направление при изменении в Player
             _player.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName == nameof(Player.X)) OnPropertyChanged(nameof(VisualX));
-                if (e.PropertyName == nameof(Player.Y)) OnPropertyChanged(nameof(VisualY));
-                if (e.PropertyName == nameof(Player.X)) OnPropertyChanged(nameof(X));
-                if (e.PropertyName == nameof(Player.Y)) OnPropertyChanged(nameof(Y));
+                if (e.PropertyName == nameof(Player.X))
+                {
+                    OnPropertyChanged(nameof(VisualX));
+                    OnPropertyChanged(nameof(X)); 
+                }
+                if (e.PropertyName == nameof(Player.Y))
+                {
+                    OnPropertyChanged(nameof(VisualY));
+                    OnPropertyChanged(nameof(Y));
+                }
                 if (e.PropertyName == nameof(Player.IsOnGround)) OnPropertyChanged(nameof(IsOnGround));
                 if (e.PropertyName == nameof(Player.IsFacingRight)) IsFacingRight = _player.IsFacingRight;
             };
