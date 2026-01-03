@@ -10,7 +10,7 @@ namespace GameApp.Core.Models
         private double _velocityY;
         private bool _isOnGround;
         private bool _isFacingRight = true;
-        private double _width = 250; 
+        private double _width = 120; 
         private double _height = 250;
 
         public double X

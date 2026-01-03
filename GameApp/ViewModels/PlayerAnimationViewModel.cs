@@ -26,8 +26,21 @@ namespace GameApp.ViewModels
         public double X => _player.X;
         public double Y => _player.Y;
         public bool IsOnGround => _player.IsOnGround;
-        public double Width => _player.Width;
-        public double Height => _player.Height;
+
+        [ObservableProperty]
+        private double _visualWidth = 250;  // Фиксированный размер спрайта
+
+        [ObservableProperty]
+        private double _visualHeight = 250;
+
+        public double VisualX => _player.X + VisualOffsetX;  // Позиция спрайта относительно хитбокса
+        public double VisualY => _player.Y + VisualOffsetY;
+
+        private double HandOffsetX = 0;
+        private double HandOffsetY = 5;
+
+        private double VisualOffsetX => (_player.Width - VisualWidth) / 2 + HandOffsetX;  // Центрируем по X: отрицательный, если спрайт шире (спрайт начинается левее хитбокса)
+        private double VisualOffsetY => _player.Height - VisualHeight + HandOffsetY;      // Align по bottom по Y: отрицательный, если спрайт выше (спрайт сдвигается вверх, ноги на уровне земли)
 
 
         public PlayerAnimationViewModel(Player player)
@@ -59,6 +72,8 @@ namespace GameApp.ViewModels
             // Автоматически обновляем позицию и направление при изменении в Player
             _player.PropertyChanged += (_, e) =>
             {
+                if (e.PropertyName == nameof(Player.X)) OnPropertyChanged(nameof(VisualX));
+                if (e.PropertyName == nameof(Player.Y)) OnPropertyChanged(nameof(VisualY));
                 if (e.PropertyName == nameof(Player.X)) OnPropertyChanged(nameof(X));
                 if (e.PropertyName == nameof(Player.Y)) OnPropertyChanged(nameof(Y));
                 if (e.PropertyName == nameof(Player.IsOnGround)) OnPropertyChanged(nameof(IsOnGround));

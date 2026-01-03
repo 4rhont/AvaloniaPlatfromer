@@ -23,28 +23,27 @@
 
 		<Image x:Name="PlayerImage"
 			   x:DataType="vmAnim:PlayerAnimationViewModel"
-			   Width="{Binding Width}"
-			   Height="{Binding Height}"
-			   Canvas.Left="{Binding X}"
-			   Canvas.Top="{Binding Y}"
+			   Width="{Binding VisualWidth}"
+			   Height="{Binding VisualHeight}"
+			   Canvas.Left="{Binding VisualX}"
+			   Canvas.Top="{Binding VisualY}"
 			   Stretch="Fill"
 			   Source="{Binding CurrentFrameBitmap}"
 			   RenderTransformOrigin="50%,50%">
-
-				<Image.RenderTransform>
-					<ScaleTransform ScaleX="{Binding IsFacingRight, Converter={StaticResource BoolToScaleConverter}}"
-									ScaleY="1"/>
-				</Image.RenderTransform>
+			<Image.RenderTransform>
+				<ScaleTransform ScaleX="{Binding IsFacingRight, Converter={StaticResource BoolToScaleConverter}}"
+								ScaleY="1"/>
+			</Image.RenderTransform>
 		</Image>
 
 		<TextBlock
-    Canvas.Left="10"
-    Canvas.Top="10"
-    Width="500"
-    Text="{Binding DebugInfo}"
-    Foreground="Black"
-    FontSize="14"
-    TextWrapping="Wrap"/>
+			Canvas.Left="10"
+			Canvas.Top="10"
+			Width="500"
+			Text="{Binding DebugInfo}"
+			Foreground="Black"
+			FontSize="14"
+			TextWrapping="Wrap"/>
 		<!-- Погода -->
 		<views:WeatherLayer Canvas.Left="0" Canvas.Top="0"
                         Width="1920" Height="1080"/>
