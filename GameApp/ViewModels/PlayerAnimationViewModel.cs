@@ -13,8 +13,17 @@ namespace GameApp.ViewModels
         private readonly Player _player;
         private readonly Bitmap[] _frames;
         private readonly Bitmap[] _idleFrames;
+        private readonly Bitmap[] _attackFrames;
         private int _currentFrame = 0;
         private int _currentIdleFrame = 0;
+
+        // состояние атаки
+        private bool _isAttacking = false;
+        private double _attackTimeElapsed = 0.0;
+        private const double AttackDuration = 0.5;         // время на всю анимацию атаки
+        private const double AttackCooldown = 0.2;         // кулдаун между атаками
+        private double _attackCooldownRemaining = 0.0;
+
 
         [ObservableProperty]
         private Bitmap _currentFrameBitmap;
@@ -104,6 +113,14 @@ namespace GameApp.ViewModels
                 _idleFrames[i] = new Bitmap(AssetLoader.Open(uri));
             }
 
+            _attackFrames = new Bitmap[8];
+            for (int i = 0; i < 8; i++)
+            {
+                var uri = new Uri($"avares://GameApp/Assets/Player/player_attack_0{i + 1}.png");
+                _attackFrames[i] = new Bitmap(AssetLoader.Open(uri));
+            }
+
+
             CurrentFrameBitmap = _frames[0];
             IsFacingRight = _player.IsFacingRight;
 
@@ -125,39 +142,77 @@ namespace GameApp.ViewModels
             };
         }
 
-        public void UpdateAnimation(double deltaTime)
+        public void TriggerAttack()
         {
-            _animationAccumulator += deltaTime;
-
-            if (_animationAccumulator >= FrameInterval)
+            if (_isAttacking || _attackCooldownRemaining > 0)
             {
-                Animate();
-                _animationAccumulator -= FrameInterval;  // Для точности
+                //System.Diagnostics.Debug.WriteLine("Атака заблокирована: уже идёт или на кулдауне");
+                return;
             }
 
-            // Обновляем направление всегда
+            //System.Diagnostics.Debug.WriteLine("началась атака");
+            _isAttacking = true;
+            _attackTimeElapsed = 0.0;
+        }
+
+        public void UpdateAnimation(double deltaTime)
+        {
+            // обновляем кулдаун
+            if (_attackCooldownRemaining > 0)
+            {
+                _attackCooldownRemaining -= deltaTime;
+                if (_attackCooldownRemaining < 0) _attackCooldownRemaining = 0;
+            }
+
+            // атака (в приоритете)
+            if (_isAttacking)
+            {
+                _attackTimeElapsed += deltaTime;
+
+                // выычисляем кадр
+                int frameIndex = (int)(_attackTimeElapsed / AttackDuration * 8);
+                frameIndex = Math.Clamp(frameIndex, 0, 7); // до 7
+
+                CurrentFrameBitmap = _attackFrames[frameIndex];
+                //System.Diagnostics.Debug.WriteLine($"Атака: кадр {frameIndex}, время { _attackTimeElapsed:F2}/{AttackDuration}");
+                // если анимация закончилась
+                if (_attackTimeElapsed >= AttackDuration)
+                {
+                    //System.Diagnostics.Debug.WriteLine("атака завершена");
+                    _isAttacking = false;
+                    _attackCooldownRemaining = AttackCooldown;
+                }
+                else
+                {
+                    // во время атаки не запускаем обычную анимацию
+                    IsFacingRight = _player.IsFacingRight;
+                    return;
+                }
+            }
+
+            // анимация покоя
+            _animationAccumulator += deltaTime;
+            if (_animationAccumulator >= FrameInterval)
+            {
+                if (_player.IsOnGround && Math.Abs(_player.VelocityX) > 0.1)
+                {
+                    _currentFrame = (_currentFrame + 1) % _frames.Length;
+                    CurrentFrameBitmap = _frames[_currentFrame];
+                }
+                else if (_player.IsOnGround)
+                {
+                    _currentIdleFrame = (_currentIdleFrame + 1) % _idleFrames.Length;
+                    CurrentFrameBitmap = _idleFrames[_currentIdleFrame];
+                }
+                else
+                {
+                    CurrentFrameBitmap = _frames[0];
+                }
+                _animationAccumulator -= FrameInterval;
+            }
+
             IsFacingRight = _player.IsFacingRight;
         }
 
-        private void Animate()
-        {
-            if (_player.IsOnGround && Math.Abs(_player.VelocityX) > 0.1)
-            {
-                // анимация движения
-                _currentFrame = (_currentFrame + 1) % _frames.Length;
-                CurrentFrameBitmap = _frames[_currentFrame];
-            }
-            else if (_player.IsOnGround)
-            {
-                // анимация покоя
-                _currentIdleFrame = (_currentIdleFrame + 1) % _idleFrames.Length;
-                CurrentFrameBitmap = _idleFrames[_currentIdleFrame];
-            }
-            else
-            {
-                // прыжок или падение
-                CurrentFrameBitmap = _frames[0];
-            }
-        }
     }
 }

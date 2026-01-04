@@ -65,6 +65,7 @@ namespace GameApp.Views
 
             PlayerImage.DataContext = _animationVM;
             DataContext = _gameVM;
+            gameVM.OnAttackTriggered += _animationVM.TriggerAttack;
 
             // Weather VM
             WeatherLayer.DataContext = new WeatherViewModel();
@@ -260,6 +261,7 @@ namespace GameApp.Views
                 Key.Left or Key.A => GameAction.MoveLeft,
                 Key.Right or Key.D => GameAction.MoveRight,
                 Key.Up or Key.W or Key.Space => GameAction.Jump,
+                Key.J or Key.LeftCtrl => GameAction.Attack,
                 _ => null
             };
         }

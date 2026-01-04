@@ -22,6 +22,8 @@ namespace GameApp.Core.ViewModels
         private readonly Camera _camera = new();
         public Camera Camera => _camera;
 
+        public event Action? OnAttackTriggered; //атака
+
         // FPS
         private int _frameCounter = 0;
         private double _fps = 0;
@@ -136,7 +138,16 @@ namespace GameApp.Core.ViewModels
             _camera.LevelHeight = level.Height;
         }
 
-        public void StartAction(GameAction action) => _activeActions.Add(action);
+        public void StartAction(GameAction action)
+        {
+            _activeActions.Add(action);
+
+            if (action == GameAction.Attack)
+            {
+                OnAttackTriggered?.Invoke();               //анимация атаки
+                _activeActions.Remove(GameAction.Attack);  // одноразовое использование
+            }
+        }
         public void StopAction(GameAction action) => _activeActions.Remove(action);
 
         private double _debugTimer;
