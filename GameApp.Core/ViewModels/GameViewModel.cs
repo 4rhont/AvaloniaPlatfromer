@@ -12,10 +12,8 @@ using GameApp.Core.Levels;
 
 namespace GameApp.Core.ViewModels
 {
-
     public class GameViewModel : ReactiveObject, IDisposable
     {
-
         private string _currentLevelId = "level1";
         private const bool DebugMode = true;
         public bool IsDebugMode => DebugMode;
@@ -29,7 +27,7 @@ namespace GameApp.Core.ViewModels
         private double _fps = 0;
         private double _fpsTimer = 0;
 
-        // Настройки фыпысы
+        // Настройки FPS
         private const double FpsUpdateInterval = 0.5; // секунд
 
         private void UpdateFps(double deltaTime)
@@ -44,7 +42,6 @@ namespace GameApp.Core.ViewModels
                 _fpsTimer = 0;
             }
         }
-
 
         public string DebugInfo
         {
@@ -90,8 +87,6 @@ namespace GameApp.Core.ViewModels
         private readonly Player _player = new();
         private readonly HashSet<GameAction> _activeActions = new();
         private readonly ObservableCollection<Platform> _platforms = new();
-        
-        private DateTime _lastUpdateTime;
 
         public Player Player => _player;
         public double PlayerX => _player.X;
@@ -105,8 +100,12 @@ namespace GameApp.Core.ViewModels
 
             LoadLevel(_currentLevelId);
 
-            _lastUpdateTime = DateTime.Now;
-            
+            // Initial setup
+            _camera.Follow(_player.X, _player.Y, _player.Width, _player.Height);
+            if (DebugMode)
+            {
+                UpdateDebugInfo();  // Force initial debug
+            }
         }
 
         private void LoadLevel(string levelId)
@@ -133,31 +132,10 @@ namespace GameApp.Core.ViewModels
 
             _currentLevelId = level.Id;
 
-            _camera.LevelWidth = level.Width;  
+            _camera.LevelWidth = level.Width;
             _camera.LevelHeight = level.Height;
         }
 
-        //private void InitializePlatforms()
-        //{
-            
-        //    _platforms.Add(new Platform(0, 800, 1000, 100));
-
-        //    _platforms.Add(new Platform(500, 300, 100, 20));
-
-        //    // Еще одна тестовая платформа
-        //    _platforms.Add(new Platform(200, 450, 150, 20));
-
-        //    // Убрали все остальные платформы для тестирования
-        //    // _platforms.Add(new Platform(0, 500, 2000, 20));
-        //    // _platforms.Add(new Platform(300, 400, 200, 20));
-        //    // _platforms.Add(new Platform(600, 350, 150, 20));
-        //    // _platforms.Add(new Platform(900, 300, 100, 20));
-        //    // _platforms.Add(new Platform(1200, 250, 200, 20));
-        //    // _platforms.Add(new Platform(-50, 0, 50, 600));
-        //    // _platforms.Add(new Platform(2000, 0, 50, 600));
-        //}
-
-        
         public void StartAction(GameAction action) => _activeActions.Add(action);
         public void StopAction(GameAction action) => _activeActions.Remove(action);
 
@@ -176,14 +154,16 @@ namespace GameApp.Core.ViewModels
         private double _accumulator = 0;
         private const double FixedDelta = 1.0 / 60.0;
 
-        public void UpdateGame()
+        private int MaxSteps = 5;
+
+        public void UpdateGame(double deltaTime)
         {
-            var realDelta = CalculateDeltaTime();
-            _accumulator += realDelta;
+            _accumulator += deltaTime;
 
             int steps = 0;
-            while (_accumulator >= FixedDelta && steps < 5)  // ограничиваем 5 шагов, чтобы избежать deadloop'a
+            while (_accumulator >= FixedDelta && steps < MaxSteps)
             {
+                _player.SavePreviousPosition(); 
                 UpdatePhysics(FixedDelta);
                 _accumulator -= FixedDelta;
                 steps++;
@@ -193,19 +173,22 @@ namespace GameApp.Core.ViewModels
 
             if (DebugMode)
             {
-                UpdateFps(realDelta);  // FPS по реальному времени
-                UpdateDebugInfoThrottled(realDelta);
-                //UpdateDebugInfo();
+                UpdateFps(deltaTime);
+                UpdateDebugInfoThrottled(deltaTime);
             }
         }
 
-        private double CalculateDeltaTime()
+        public double InterpolationAlpha
         {
-            var currentTime = DateTime.Now;
-            var deltaTime = (currentTime - _lastUpdateTime).TotalSeconds;
-            _lastUpdateTime = currentTime;
-            return deltaTime;
+            get
+            {
+                if (FixedDelta <= 0)
+                    return 0;
+
+                return Math.Clamp(_accumulator / FixedDelta, 0.0, 1.0);
+            }
         }
+
 
         private void UpdatePhysics(double deltaTime)
         {
@@ -219,16 +202,13 @@ namespace GameApp.Core.ViewModels
 
         private void CheckFallDeath()
         {
-            // Если игрок упал ниже определенного уровня
-            if (_player.Y > 2000) // ПОКА ЧТО КОНСТАНТА ПОТОМ ПОМЕНЯТЬ
+            if (_player.Y > 2000)
             {
-                // Респавн игрока - возвращаем в начальную позицию
                 _player.X = 200;
                 _player.Y = 700;
                 _player.VelocityX = 0;
                 _player.VelocityY = 0;
 
-                // Потом добавим эффекты
                 System.Diagnostics.Debug.WriteLine("Player fell to death! Respawning...");
             }
         }
@@ -243,7 +223,6 @@ namespace GameApp.Core.ViewModels
 
         private void HandleMovement(double deltaTime)
         {
-            // Горизонтальное движение через GameAction
             if (_activeActions.Contains(GameAction.MoveLeft))
             {
                 _player.VelocityX -= PhysicsService.MoveAcceleration * deltaTime;
@@ -255,11 +234,9 @@ namespace GameApp.Core.ViewModels
                 _player.IsFacingRight = true;
             }
 
-            // Ограничение максимальной скорости
             _player.VelocityX = Math.Clamp(_player.VelocityX,
                 -PhysicsService.MaxMoveSpeed, PhysicsService.MaxMoveSpeed);
 
-            // Прыжок
             if (_activeActions.Contains(GameAction.Jump) && _player.IsOnGround)
             {
                 _player.VelocityY = PhysicsService.JumpVelocity;
@@ -325,10 +302,9 @@ namespace GameApp.Core.ViewModels
 
             _player.IsOnGround = grounded;
         }
-        public void Dispose()  // Должен быть public
+        public void Dispose()
         {
             // Здесь можно добавить очистку
-            // Пока пустой, _gameLoop удалён
         }
     }
 }

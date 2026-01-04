@@ -13,6 +13,18 @@ namespace GameApp.Core.Models
         private double _width = 120; 
         private double _height = 250;
 
+        private double _prevX;
+        private double _prevY;
+
+        public double PrevX => _prevX;
+        public double PrevY => _prevY;
+
+        public void SavePreviousPosition()
+        {
+            _prevX = X;
+            _prevY = Y;
+        }
+
         public double X
         {
             get => _x;

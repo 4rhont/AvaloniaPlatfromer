@@ -1,10 +1,10 @@
-﻿using System;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GameApp.Core.Models;
+using GameApp.Core.ViewModels;
+using System;
 
 namespace GameApp.ViewModels
 {
@@ -15,7 +15,6 @@ namespace GameApp.ViewModels
         private readonly Bitmap[] _idleFrames;
         private int _currentFrame = 0;
         private int _currentIdleFrame = 0;
-        private readonly DispatcherTimer _timer;
 
         [ObservableProperty]
         private Bitmap _currentFrameBitmap;
@@ -33,8 +32,35 @@ namespace GameApp.ViewModels
         [ObservableProperty]
         private double _visualHeight = 250;
 
-        public double VisualX => _player.X + VisualOffsetX;  // Позиция спрайта относительно хитбокса
-        public double VisualY => _player.Y + VisualOffsetY;
+        //public double VisualX => _player.X + VisualOffsetX;  // Позиция спрайта относительно хитбокса
+        //public double VisualY => _player.Y + VisualOffsetY;
+
+        public double VisualX
+        {
+            get
+            {
+                double alpha = _gameVM.InterpolationAlpha;
+                double x =
+                    _player.PrevX +
+                    (_player.X - _player.PrevX) * alpha;
+
+                return x + VisualOffsetX;
+            }
+        }
+
+        public double VisualY
+        {
+            get
+            {
+                double alpha = _gameVM.InterpolationAlpha;
+                double y =
+                    _player.PrevY +
+                    (_player.Y - _player.PrevY) * alpha;
+
+                return y + VisualOffsetY;
+            }
+        }
+
 
         private double HandOffsetX = -5;
         private double HandOffsetY = 5;
@@ -45,33 +71,41 @@ namespace GameApp.ViewModels
         ? (_player.Width - VisualWidth) / 2 + HandOffsetX
         : (_player.Width - VisualWidth) / 2 + MirrorCorrectionX + HandOffsetY;  // MirrorCorrectionX - корректировка если сдвигается спрайт при повороте
 
-        private double VisualOffsetY => _player.Height - VisualHeight + HandOffsetY;      
+        private double VisualOffsetY => _player.Height - VisualHeight + HandOffsetY;
 
-        public PlayerAnimationViewModel(Player player)
+        private double _animationAccumulator = 0;
+        private const double FrameInterval = 0.15;  // 150ms
+
+        private readonly GameViewModel _gameVM;
+
+        public void NotifyRenderPositionChanged()
+        {
+            OnPropertyChanged(nameof(VisualX));
+            OnPropertyChanged(nameof(VisualY));
+        }
+
+        public PlayerAnimationViewModel(Player player, GameViewModel gameVM)
         {
             _player = player;
+            _gameVM = gameVM;
 
             _frames = new Bitmap[5];
 
             for (int i = 0; i < _frames.Length; i++)
             {
-                var uri = new Uri($"avares://GameApp/Assets/Player/player_walk_0{i + 1}.png"); // поправить имена файлов и смещение по i
+                var uri = new Uri($"avares://GameApp/Assets/Player/player_walk_0{i + 1}.png");
                 _frames[i] = new Bitmap(AssetLoader.Open(uri));
             }
 
             _idleFrames = new Bitmap[4];
             for (int i = 0; i < _idleFrames.Length; i++)
             {
-                var uri = new Uri($"avares://GameApp/Assets/Player/player_idle_0{i + 1}.png"); // поправить имена файлов и смещение по i
+                var uri = new Uri($"avares://GameApp/Assets/Player/player_idle_0{i + 1}.png");
                 _idleFrames[i] = new Bitmap(AssetLoader.Open(uri));
             }
 
             CurrentFrameBitmap = _frames[0];
             IsFacingRight = _player.IsFacingRight;
-
-            _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
-            _timer.Tick += (_, __) => Animate();
-            _timer.Start();
 
             // Автоматически обновляем позицию и направление при изменении в Player
             _player.PropertyChanged += (_, e) =>
@@ -79,7 +113,7 @@ namespace GameApp.ViewModels
                 if (e.PropertyName == nameof(Player.X))
                 {
                     OnPropertyChanged(nameof(VisualX));
-                    OnPropertyChanged(nameof(X)); 
+                    OnPropertyChanged(nameof(X));
                 }
                 if (e.PropertyName == nameof(Player.Y))
                 {
@@ -89,6 +123,20 @@ namespace GameApp.ViewModels
                 if (e.PropertyName == nameof(Player.IsOnGround)) OnPropertyChanged(nameof(IsOnGround));
                 if (e.PropertyName == nameof(Player.IsFacingRight)) IsFacingRight = _player.IsFacingRight;
             };
+        }
+
+        public void UpdateAnimation(double deltaTime)
+        {
+            _animationAccumulator += deltaTime;
+
+            if (_animationAccumulator >= FrameInterval)
+            {
+                Animate();
+                _animationAccumulator -= FrameInterval;  // Для точности
+            }
+
+            // Обновляем направление всегда
+            IsFacingRight = _player.IsFacingRight;
         }
 
         private void Animate()
@@ -107,12 +155,9 @@ namespace GameApp.ViewModels
             }
             else
             {
-                // прыжок или падение (в разработке)
+                // прыжок или падение
                 CurrentFrameBitmap = _frames[0];
             }
-
-            // отзеркаливание
-            IsFacingRight = _player.IsFacingRight;
         }
     }
 }

@@ -13,6 +13,7 @@ using GameApp.ViewModels;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace GameApp.Views
 {
@@ -20,7 +21,8 @@ namespace GameApp.Views
     {
         private readonly GameViewModel _gameVM;
         private readonly PlayerAnimationViewModel _animationVM;
-
+        private DispatcherTimer _gameTimer;
+        private Stopwatch _stopwatch = new Stopwatch();
 
         private readonly List<Control> _platformVisuals = new();
         private Bitmap? _platformTexture;
@@ -28,8 +30,89 @@ namespace GameApp.Views
         private readonly List<Control> _debugPlatformRects = new();
         private Avalonia.Controls.Shapes.Rectangle? _debugPlayerRect;
 
-        private DispatcherTimer _gameTimer;
+        public GameView(GameViewModel gameVM)
+        {
+            _gameVM = gameVM;
+            _animationVM = new PlayerAnimationViewModel(_gameVM.Player, _gameVM);
 
+            InitializeComponent();
+
+            MainCanvas.RenderTransform = new TranslateTransform();
+
+            // Подписка на камеру
+            _gameVM.Camera.WhenAnyValue(c => c.X, c => c.Y)
+                .Subscribe(_ =>
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        var transform = (TranslateTransform)MainCanvas.RenderTransform!;
+                        transform.X = -_gameVM.Camera.X;
+                        transform.Y = -_gameVM.Camera.Y;
+                    });
+                });
+
+            if (_gameVM.IsDebugMode)
+            {
+                _gameVM.WhenAnyValue(vm => vm.PlayerX, vm => vm.PlayerY)
+                    .Subscribe(_ =>
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            DrawDebugPlayer();
+                        });
+                    });
+            }
+
+            PlayerImage.DataContext = _animationVM;
+            DataContext = _gameVM;
+
+            // Weather VM
+            WeatherLayer.DataContext = new WeatherViewModel();
+
+            LoadPlatformTexture();
+            CreatePlatforms();
+
+            if (_gameVM.IsDebugMode)
+            {
+                DrawDebugPlatforms();
+                DrawDebugPlayer();
+            }
+
+            Focusable = true;
+            AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
+            AddHandler(KeyUpEvent, OnKeyUp, RoutingStrategies.Tunnel);
+            Activated += (_, __) => Focus();
+
+            _stopwatch = Stopwatch.StartNew();
+
+            _gameTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(8) };  // FPS
+            _gameTimer.Tick += OnTick;
+            _gameTimer.Start();
+
+        }
+
+        private void OnTick(object? sender, EventArgs e)
+        {
+            var deltaTime = _stopwatch.Elapsed.TotalSeconds;
+            _stopwatch.Restart();
+
+            if (deltaTime <= 0) deltaTime = 1.0 / 60.0;  // Предотвращаем нулевые delta
+
+            // Обновляем физику
+            _gameVM.UpdateGame(deltaTime);
+
+            // Обновляем анимации и погоду
+            _animationVM.UpdateAnimation(deltaTime);
+
+            if (WeatherLayer.DataContext is WeatherViewModel weatherVM)
+            {
+                weatherVM.Update(deltaTime);
+            }
+
+            _animationVM.NotifyRenderPositionChanged();
+        }
+
+        // Остальной код без изменений (DrawDebugPlatforms, DrawDebugPlayer, LoadPlatformTexture, CreatePlatforms, AddTile, AddRectanglePlatform, OnKeyDown, OnKeyUp, ConvertKeyToAction)
         private void DrawDebugPlatforms()
         {
             if (_debugPlatformRects.Count == 0)
@@ -74,67 +157,6 @@ namespace GameApp.Views
             Canvas.SetTop(_debugPlayerRect, _gameVM.Player.Y);
         }
 
-
-        public GameView(GameViewModel gameVM)
-        {
-            _gameVM = gameVM;
-            _animationVM = new PlayerAnimationViewModel(gameVM.Player);
-
-            InitializeComponent();
-
-            MainCanvas.RenderTransform = new TranslateTransform();
-
-            // Подписка на камеру (без изменений)
-            _gameVM.Camera.WhenAnyValue(c => c.X, c => c.Y)
-                .Subscribe(_ =>
-                {
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        var transform = (TranslateTransform)MainCanvas.RenderTransform!;
-                        transform.X = -_gameVM.Camera.X;
-                        transform.Y = -_gameVM.Camera.Y;
-                    });
-                });
-
-            if (_gameVM.IsDebugMode)
-            {
-                _gameVM.WhenAnyValue(vm => vm.PlayerX, vm => vm.PlayerY)
-                    .Subscribe(_ =>
-                    {
-                        Dispatcher.UIThread.Post(() =>
-                        {
-                            DrawDebugPlayer();
-                        });
-                    });
-            }
-
-            PlayerImage.DataContext = _animationVM;
-            DataContext = _gameVM;
-
-            LoadPlatformTexture();
-            CreatePlatforms();
-
-            if (_gameVM.IsDebugMode)
-            {
-                DrawDebugPlatforms();
-                DrawDebugPlayer();
-            }
-
-            Focusable = true;
-            AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
-            AddHandler(KeyUpEvent, OnKeyUp, RoutingStrategies.Tunnel);
-            Activated += (_, __) => Focus();
-
-            // Новый game loop с DispatcherTimer
-            _gameTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromMilliseconds(1000.0 / 120.0),  // TIMER
-            };
-            _gameTimer.Tick += (sender, e) => _gameVM.UpdateGame();
-            _gameTimer.Start();
-        }
-
-        
         private void LoadPlatformTexture()
         {
             try
@@ -151,7 +173,7 @@ namespace GameApp.Views
 
         private void CreatePlatforms()
         {
-            if (_platformVisuals.Count > 0) return;  // Защита от повторного вызова
+            if (_platformVisuals.Count > 0) return;
 
             foreach (var platform in _gameVM.Platforms)
             {
@@ -161,7 +183,6 @@ namespace GameApp.Views
                     continue;
                 }
 
-                // Тайлинг — без изменений, но один раз
                 double tileW = _platformTexture.PixelSize.Width;
                 double tileH = _platformTexture.PixelSize.Height;
 
@@ -181,7 +202,6 @@ namespace GameApp.Views
             }
         }
 
-        //создание "обрезков" текстуры
         private void AddTile(double left, double top, double width, double height)
         {
             var tile = new Image
@@ -203,7 +223,7 @@ namespace GameApp.Views
             {
                 Width = platform.Width,
                 Height = platform.Height,
-                Fill = new SolidColorBrush(Colors.Green), //зеленая заглушка для платформы, если нет текстуру
+                Fill = new SolidColorBrush(Colors.Green),
                 Stroke = new SolidColorBrush(Colors.DarkGreen),
                 StrokeThickness = 2
             };
@@ -212,7 +232,6 @@ namespace GameApp.Views
             MainCanvas.Children.Add(rect);
             _platformVisuals.Add(rect);
         }
-
 
         private void OnKeyDown(object? sender, KeyEventArgs e)
         {

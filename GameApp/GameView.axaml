@@ -38,7 +38,7 @@
             </Image>
 
             <!-- Погода -->
-            <views:WeatherLayer Width="1920" Height="1080"/>
+            <views:WeatherLayer x:Name="WeatherLayer" Width="1920" Height="1080"/>
 
             <!-- Debug hitboxes двигаются камерой -->
             <Canvas x:Name="DebugCanvas"
