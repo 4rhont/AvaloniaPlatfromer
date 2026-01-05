@@ -25,6 +25,14 @@ namespace GameApp.Core.Services
                    player.Bottom > enemy.Y;
         }
 
+        public static bool CheckCollision(Enemy enemy, Platform platform)
+        {
+            return enemy.X < platform.Right &&
+                   enemy.Right > platform.X &&
+                   enemy.Y < platform.Bottom &&
+                   enemy.Bottom > platform.Y;
+        }
+
         public static CollisionType GetCollisionType(Player player, Platform platform)
         {
             var playerBottom = player.Bottom;

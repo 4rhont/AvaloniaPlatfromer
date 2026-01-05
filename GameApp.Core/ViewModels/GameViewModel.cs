@@ -253,8 +253,22 @@ namespace GameApp.Core.ViewModels
 
             foreach (var enemy in _enemies)
             {
-                enemy.Update(deltaTime);  
+                enemy.VelocityY += PhysicsService.Gravity * deltaTime;
+                enemy.Update(deltaTime);
+
+                enemy.Y += enemy.VelocityY * deltaTime;
+
+                foreach (var p in _platforms)
+                {
+                    if (PhysicsService.CheckCollision(enemy, p))
+                    {
+                        enemy.Y = p.Y - enemy.Height;
+                        enemy.VelocityY = 0;
+                        enemy.IsOnGround = true;
+                    }
+                }
             }
+
 
             UpdatePosition(deltaTime);
             CheckGroundCollision();

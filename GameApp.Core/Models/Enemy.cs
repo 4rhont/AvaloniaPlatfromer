@@ -14,6 +14,11 @@ namespace GameApp.Core.Models
         private int _health = 5;
         private int _maxHealth = 5;
 
+        private double _startX;
+        private double _patrolRange = 800;
+        private double _speed = 200;
+        private int _direction = 1;
+
         public double X { get => _x; set => this.RaiseAndSetIfChanged(ref _x, value); }
         public double Y { get => _y; set => this.RaiseAndSetIfChanged(ref _y, value); }
         public double Width { get => _width; set => this.RaiseAndSetIfChanged(ref _width, value); }
@@ -21,6 +26,8 @@ namespace GameApp.Core.Models
         public int Damage { get => _damage; set => this.RaiseAndSetIfChanged(ref _damage, value); }
         public int Health { get => _health; set => this.RaiseAndSetIfChanged(ref _health, value); }
         public int MaxHealth { get => _maxHealth; set => this.RaiseAndSetIfChanged(ref _maxHealth, value); }
+
+        public bool IsOnGround { get; set; }
 
         public double Right => X + Width;
         public double Bottom => Y + Height;
@@ -48,11 +55,20 @@ namespace GameApp.Core.Models
             Damage = damage;
             Health = health;
             MaxHealth = health;
+
+            _startX = x;
         }
 
         public void Update(double deltaTime)
         {
-            
+            VelocityX = _direction * _speed;
+
+            X += VelocityX * deltaTime;
+
+            if (X > _startX + _patrolRange)
+                _direction = -1;
+            else if (X < _startX - _patrolRange)
+                _direction = 1;
         }
     }
 }
