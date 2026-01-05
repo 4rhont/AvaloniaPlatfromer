@@ -17,6 +17,13 @@ namespace GameApp.Core.Services
                    player.Y < platform.Y + platform.Height &&
                    player.Bottom > platform.Y;
         }
+        public static bool CheckCollision(Player player, Enemy enemy)
+        {
+            return player.X < enemy.X + enemy.Width &&
+                   player.Right > enemy.X &&
+                   player.Y < enemy.Y + enemy.Height &&
+                   player.Bottom > enemy.Y;
+        }
 
         public static CollisionType GetCollisionType(Player player, Platform platform)
         {
@@ -36,6 +43,37 @@ namespace GameApp.Core.Services
                                     Math.Min(overlapTop, overlapBottom));
 
             // Определяем тип коллизии по минимальному перекрытию
+            if (minOverlap == overlapTop)
+            {
+                return CollisionType.Top;
+            }
+            else if (minOverlap == overlapBottom)
+            {
+                return CollisionType.Bottom;
+            }
+            else if (minOverlap == overlapLeft || minOverlap == overlapRight)
+            {
+                return CollisionType.Side;
+            }
+
+            return CollisionType.None;
+        }
+
+        public static CollisionType GetCollisionType(Player player, Enemy enemy)
+        {
+            var playerBottom = player.Bottom;
+            var playerRight = player.Right;
+            var enemyBottom = enemy.Y + enemy.Height;
+            var enemyRight = enemy.X + enemy.Width;
+
+            var overlapLeft = playerRight - enemy.X;
+            var overlapRight = enemyRight - player.X;
+            var overlapTop = playerBottom - enemy.Y;
+            var overlapBottom = enemyBottom - player.Y;
+
+            var minOverlap = Math.Min(Math.Min(overlapLeft, overlapRight),
+                                      Math.Min(overlapTop, overlapBottom));
+
             if (minOverlap == overlapTop)
             {
                 return CollisionType.Top;

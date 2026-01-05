@@ -93,7 +93,7 @@
       "x": 3064,
       "y": 1567,
       "width": 1560,
-      "height": 160
+      "height": 153
     },
     {
       "x": 3064,
@@ -112,6 +112,24 @@
       "y": 1937,
       "width": 248,
       "height": 352
+    },
+    {
+      "x": 5144,
+      "y": 1620,
+      "width": 591,
+      "height": 100,
+      "isDamaging": true,
+      "damage": 1
+    }
+  ],
+  "enemies": [
+    {
+      "x": 3476,
+      "y": 1367,
+      "width": 176,
+      "height": 200,
+      "damage": 1,
+      "health": 5
     }
   ]
 }

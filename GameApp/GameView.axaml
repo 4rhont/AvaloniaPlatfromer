@@ -37,6 +37,8 @@
                 </Image.RenderTransform>
             </Image>
 
+            
+
             <!-- Погода -->
             <views:WeatherLayer x:Name="WeatherLayer" Width="1920" Height="1080"/>
 

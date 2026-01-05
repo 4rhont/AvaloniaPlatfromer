@@ -30,6 +30,9 @@ namespace GameApp.Core.ViewModels
         private const double FallDamageThreshold = 1000; // Порог скорости Y для урона от падения
         private double _lastVelocityY; // Для отслеживания скорости перед приземлением
 
+        private readonly ObservableCollection<Enemy> _enemies = new();
+        public ObservableCollection<Enemy> Enemies => _enemies;
+
         // FPS
         private int _frameCounter = 0;
         private double _fps = 0;
@@ -78,6 +81,18 @@ namespace GameApp.Core.ViewModels
             }
 
             lines.Add("");
+            lines.Add($"ENEMIES COUNT: {_enemies.Count}");
+
+            int enemyIndex = 0;
+            foreach (var e in _enemies)
+            {
+                lines.Add(
+                    $"[Enemy {enemyIndex}] X:{e.X:F1} Y:{e.Y:F1} HP:{e.Health}/{e.MaxHealth}"
+                );
+                enemyIndex++;
+            }
+
+            lines.Add("");
             lines.Add($"PLAYER X:{_player.X:F1} Y:{_player.Y:F1}");
             lines.Add($"HEALTH: {_player.CurrentHealth}/{_player.MaxHealth}");
             lines.Add($"ON GROUND: {_player.IsOnGround}");
@@ -119,6 +134,7 @@ namespace GameApp.Core.ViewModels
 
         private void LoadLevel(string levelId)
         {
+            _enemies.Clear();
             _platforms.Clear();
 
             var level = LevelLoader.Load(levelId);
@@ -141,6 +157,18 @@ namespace GameApp.Core.ViewModels
                     p.Height,
                     p.IsDamaging ?? false,  // Из json или false
                     p.Damage ?? 0           // Из json или 0
+                ));
+            }
+
+            foreach (var e in level.Enemies)
+            {
+                _enemies.Add(new Enemy(
+                    e.X,
+                    e.Y,
+                    e.Width,
+                    e.Height,
+                    e.Damage,
+                    e.Health
                 ));
             }
 
@@ -223,9 +251,45 @@ namespace GameApp.Core.ViewModels
 
             _lastVelocityY = _player.VelocityY;
 
+            foreach (var enemy in _enemies)
+            {
+                enemy.Update(deltaTime);  
+            }
+
             UpdatePosition(deltaTime);
             CheckGroundCollision();
+            CheckEnemyCollisions();
             CheckFallDeath();
+        }
+
+        private void CheckEnemyCollisions()
+        {
+            foreach (var enemy in _enemies)
+            {
+                if (PhysicsService.CheckCollision(_player, enemy))
+                {
+                    var col = PhysicsService.GetCollisionType(_player, enemy);
+
+                    double knockbackX = 0;
+                    double knockbackY = -200;
+
+                    if (col == CollisionType.Top)
+                    {
+                        knockbackY = -800; 
+                    }
+                    else if (col == CollisionType.Bottom)
+                    {
+                        knockbackY = 200;   
+                    }
+                    else if (col == CollisionType.Side)
+                    {
+                        knockbackX = (_player.CenterX < enemy.CenterX) ? -800 : 800;
+                        knockbackY = -200;  
+                    }
+
+                    _player.TakeDamage(enemy.Damage, knockbackX, knockbackY);
+                }
+            }
         }
 
         private void CheckFallDeath()

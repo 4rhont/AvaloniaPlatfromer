@@ -13,6 +13,7 @@ using GameApp.ViewModels;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 
 namespace GameApp.Views
@@ -26,11 +27,16 @@ namespace GameApp.Views
 
         private readonly Dictionary<Platform, List<Control>> _platformVisualMap = new();
         private readonly Dictionary<Platform, Control> _debugPlatformMap = new();
+
         private const double VisibilityBuffer = 200;
 
         private Bitmap? _platformTexture;
 
-        
+        // Пока что неп юзается, на будущее:
+        private readonly Dictionary<Enemy, Image> _enemyVisualMap = new();
+        private readonly Dictionary<Enemy, Control> _debugEnemyMap = new();
+        private Bitmap? _enemyTexture;
+
         private Avalonia.Controls.Shapes.Rectangle? _debugPlayerRect;
 
         public GameView(GameViewModel gameVM)
@@ -53,6 +59,7 @@ namespace GameApp.Views
                         transform.Y = -_gameVM.Camera.Y;
 
                         UpdatePlatformVisibility();
+                        UpdateEnemyVisibility();
                     });
                 });
 
@@ -78,9 +85,11 @@ namespace GameApp.Views
             LoadPlatformTexture();
             CreatePlatforms();
 
+
             if (_gameVM.IsDebugMode)
             {
                 DrawDebugPlatforms();
+                DrawDebugEnemies();
                 DrawDebugPlayer();
             }
 
@@ -119,6 +128,24 @@ namespace GameApp.Views
             }
 
             _animationVM.NotifyRenderPositionChanged();
+        }
+
+        private void UpdateEnemyVisibility()
+        {
+            if (!_gameVM.IsDebugMode) return;
+
+            double left = _gameVM.Camera.X - VisibilityBuffer;
+            double top = _gameVM.Camera.Y - VisibilityBuffer;
+            double right = _gameVM.Camera.X + _gameVM.Camera.ViewportWidth + VisibilityBuffer;
+            double bottom = _gameVM.Camera.Y + _gameVM.Camera.ViewportHeight + VisibilityBuffer;
+
+            foreach (var kvp in _debugEnemyMap)
+            {
+                var enemy = kvp.Key;
+                var rect = kvp.Value;
+                bool isVisible = enemy.X < right && enemy.Right > left && enemy.Y < bottom && enemy.Bottom > top;
+                rect.IsVisible = isVisible;
+            }
         }
 
         private void UpdatePlatformVisibility()
@@ -198,6 +225,37 @@ namespace GameApp.Views
             Canvas.SetTop(_debugPlayerRect, _gameVM.Player.Y);
         }
 
+        private void DrawDebugEnemies()
+        {
+            foreach (var enemy in _gameVM.Enemies)
+            {
+                var rect = new Avalonia.Controls.Shapes.Rectangle
+                {
+                    Width = enemy.Width,
+                    Height = enemy.Height,
+                    Fill = new SolidColorBrush(Colors.Purple), 
+                    Stroke = new SolidColorBrush(Colors.Violet),
+                    StrokeThickness = 2
+                };
+                Canvas.SetLeft(rect, enemy.X);
+                Canvas.SetTop(rect, enemy.Y);
+                DebugCanvas.Children.Add(rect);
+                _debugEnemyMap[enemy] = rect;
+
+                // Подписка на изменения позиции (если враги будут двигаться)
+                enemy.PropertyChanged += (_, e) =>
+                {
+                    if (e.PropertyName == nameof(Enemy.X))
+                    {
+                        Canvas.SetLeft(rect, enemy.X);
+                    }
+                    if (e.PropertyName == nameof(Enemy.Y))
+                    {
+                        Canvas.SetTop(rect, enemy.Y);
+                    }
+                };
+            }
+        }
         private void LoadPlatformTexture()
         {
             try
