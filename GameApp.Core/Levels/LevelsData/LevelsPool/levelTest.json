@@ -1,7 +1,7 @@
 ﻿{
   "id": "level1",
-  "playerStartX": 200,
-  "playerStartY": 1200,
+  "playerStartX": 800,
+  "playerStartY": 200,
   "width": 10000,
   "height": 3000,
   "platforms": [

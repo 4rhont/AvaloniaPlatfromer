@@ -41,9 +41,6 @@ namespace GameApp.ViewModels
         [ObservableProperty]
         private double _visualHeight = 250;
 
-        //public double VisualX => _player.X + VisualOffsetX;  // Позиция спрайта относительно хитбокса
-        //public double VisualY => _player.Y + VisualOffsetY;
-
         public double VisualX
         {
             get

@@ -22,6 +22,9 @@ namespace GameApp.Core.ViewModels
         private readonly Camera _camera = new();
         public Camera Camera => _camera;
 
+        private double _spawnX;
+        private double _spawnY;
+
         public event Action? OnAttackTriggered; //атака
 
         // FPS
@@ -118,6 +121,8 @@ namespace GameApp.Core.ViewModels
 
             _player.X = level.PlayerStartX;
             _player.Y = level.PlayerStartY;
+            _spawnX = level.PlayerStartX;
+            _spawnY = level.PlayerStartY;
             _player.VelocityX = 0;
             _player.VelocityY = 0;
             _player.IsOnGround = false;
@@ -213,10 +218,10 @@ namespace GameApp.Core.ViewModels
 
         private void CheckFallDeath()
         {
-            if (_player.Y > 2000)
+            if (_player.Y > Camera.LevelHeight)
             {
-                _player.X = 200;
-                _player.Y = 700;
+                _player.X = _spawnX;
+                _player.Y = _spawnY;
                 _player.VelocityX = 0;
                 _player.VelocityY = 0;
 

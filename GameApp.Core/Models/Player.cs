@@ -11,7 +11,7 @@ namespace GameApp.Core.Models
         private bool _isOnGround;
         private bool _isFacingRight = true;
         private double _width = 120; 
-        private double _height = 250;
+        private double _height = 210;
 
         private double _prevX;
         private double _prevY;
