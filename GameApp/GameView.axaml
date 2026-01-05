@@ -69,7 +69,7 @@
             HorizontalAlignment="Left"
             VerticalAlignment="Bottom"
             Margin="10"
-            Text="Controls: WASD or arrows, Space to jump"
+            Text="Controls: WASD/arrows, Space=Jump, LMB=Attack"
             Foreground="White"
             FontSize="14"/>
 

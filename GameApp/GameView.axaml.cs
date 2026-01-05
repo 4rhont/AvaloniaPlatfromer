@@ -89,6 +89,7 @@ namespace GameApp.Views
             Focusable = true;
             AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
             AddHandler(KeyUpEvent, OnKeyUp, RoutingStrategies.Tunnel);
+            AddHandler(PointerPressedEvent, OnPointerPressed, RoutingStrategies.Tunnel);
             Activated += (_, __) => Focus();
 
             _stopwatch = Stopwatch.StartNew();
@@ -154,7 +155,6 @@ namespace GameApp.Views
             }
         }
 
-        // Остальной код без изменений (DrawDebugPlatforms, DrawDebugPlayer, LoadPlatformTexture, CreatePlatforms, AddTile, AddRectanglePlatform, OnKeyDown, OnKeyUp, ConvertKeyToAction)
         private void DrawDebugPlatforms()
         {
             if (_debugPlatformMap.Count > 0) return;
@@ -290,6 +290,16 @@ namespace GameApp.Views
             }
         }
 
+        private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            var pointerPoint = e.GetCurrentPoint(this);
+            if (pointerPoint.Properties.IsLeftButtonPressed)
+            {
+                _gameVM.StartAction(GameAction.Attack);
+                e.Handled = true;
+            }
+        }
+
         private GameAction? ConvertKeyToAction(Key key)
         {
             return key switch
@@ -297,7 +307,6 @@ namespace GameApp.Views
                 Key.Left or Key.A => GameAction.MoveLeft,
                 Key.Right or Key.D => GameAction.MoveRight,
                 Key.Up or Key.W or Key.Space => GameAction.Jump,
-                Key.J or Key.LeftCtrl => GameAction.Attack,
                 _ => null
             };
         }
