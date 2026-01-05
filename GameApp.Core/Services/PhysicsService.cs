@@ -61,12 +61,20 @@ namespace GameApp.Core.Services
                     player.Y = platform.Y - player.Height;
                     player.VelocityY = 0;
                     player.IsOnGround = true;
+                    if (platform.IsDamaging)
+                    {
+                        player.TakeDamage(platform.Damage, 0, -400);  // Дамаг с отскоком вверх
+                    }
                     break;
 
                 case CollisionType.Bottom:
                     // Игрок ударяется головой
                     player.Y = platform.Y + platform.Height;
                     player.VelocityY = 0;
+                    if (platform.IsDamaging)
+                    {
+                        player.TakeDamage(platform.Damage, 0, 300);  // Дамаг с отскоком вниз
+                    }
                     break;
 
                 case CollisionType.Side:
@@ -79,7 +87,18 @@ namespace GameApp.Core.Services
                     {
                         player.X = platform.X + platform.Width;
                     }
-                    player.VelocityX = 0;
+
+                    if (platform.IsDamaging)
+                    {
+                        //player.TakeDamage(platform.Damage, -player.VelocityX * 0.4, -50);  // Дамаг с отскоком в сторону и вверх
+                        player.TakeDamage(platform.Damage, -3.4*player.VelocityX, -100);  // Дамаг с отскоком в сторону и вверх
+                    }
+                    else
+                    {
+                        player.VelocityX = 0;
+                    }
+
+
                     break;
             }
         }

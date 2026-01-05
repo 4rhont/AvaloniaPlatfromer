@@ -105,7 +105,7 @@ namespace GameApp.Views
             var deltaTime = _stopwatch.Elapsed.TotalSeconds;
             _stopwatch.Restart();
 
-            if (deltaTime <= 0) deltaTime = 1.0 / 60.0;  // Предотвращаем нулевые delta
+            if (deltaTime <= 0) deltaTime = 1.0 / 120.0;  // Предотвращаем нулевые delta
 
             // Обновляем физику
             _gameVM.UpdateGame(deltaTime);

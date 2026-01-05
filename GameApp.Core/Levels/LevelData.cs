@@ -10,5 +10,7 @@ namespace GameApp.Core.Levels
         public List<PlatformData> Platforms { get; set; } = new();
         public double Width { get; set; } = 1920;  // Default, если не указано
         public double Height { get; set; } = 1080;
+
+        
     }
 }

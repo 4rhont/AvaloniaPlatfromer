@@ -27,6 +27,9 @@ namespace GameApp.Core.ViewModels
 
         public event Action? OnAttackTriggered; //атака
 
+        private const double FallDamageThreshold = 1000; // Порог скорости Y для урона от падения
+        private double _lastVelocityY; // Для отслеживания скорости перед приземлением
+
         // FPS
         private int _frameCounter = 0;
         private double _fps = 0;
@@ -76,6 +79,7 @@ namespace GameApp.Core.ViewModels
 
             lines.Add("");
             lines.Add($"PLAYER X:{_player.X:F1} Y:{_player.Y:F1}");
+            lines.Add($"HEALTH: {_player.CurrentHealth}/{_player.MaxHealth}");
             lines.Add($"ON GROUND: {_player.IsOnGround}");
             lines.Add($"VEL X:{_player.VelocityX:F1} Y:{_player.VelocityY:F1}");
             lines.Add($"FPS: {_fps:F1}");
@@ -125,6 +129,7 @@ namespace GameApp.Core.ViewModels
             _spawnY = level.PlayerStartY;
             _player.VelocityX = 0;
             _player.VelocityY = 0;
+            _player.SetSpawnPoint(level.PlayerStartX, level.PlayerStartY);
             _player.IsOnGround = false;
 
             foreach (var p in level.Platforms)
@@ -133,7 +138,9 @@ namespace GameApp.Core.ViewModels
                     p.X,
                     p.Y,
                     p.Width,
-                    p.Height
+                    p.Height,
+                    p.IsDamaging ?? false,  // Из json или false
+                    p.Damage ?? 0           // Из json или 0
                 ));
             }
 
@@ -211,6 +218,11 @@ namespace GameApp.Core.ViewModels
             ApplyGravity(deltaTime);
             HandleMovement(deltaTime);
             ApplyFriction(deltaTime);
+
+            _player.Update(deltaTime);
+
+            _lastVelocityY = _player.VelocityY;
+
             UpdatePosition(deltaTime);
             CheckGroundCollision();
             CheckFallDeath();
@@ -289,6 +301,8 @@ namespace GameApp.Core.ViewModels
 
         private void CheckGroundCollision()
         {
+            bool wasOnGround = _player.IsOnGround;
+
             foreach (var p in _platforms)
             {
                 if (PhysicsService.CheckCollision(_player, p))
@@ -317,6 +331,12 @@ namespace GameApp.Core.ViewModels
             }
 
             _player.IsOnGround = grounded;
+
+            if (grounded && !wasOnGround && _lastVelocityY > FallDamageThreshold)
+            {
+                int damage = 1;
+                _player.TakeDamage(damage, 0, -200);  // Отскок
+            }
         }
         public void Dispose()
         {

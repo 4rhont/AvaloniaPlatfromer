@@ -8,7 +8,10 @@ namespace GameApp.Core.Models
         private double _y;
         private double _width;
         private double _height;
-
+        private bool _isDamaging = false;
+        private int _damage = 0;
+        public bool IsDamaging { get => _isDamaging; set => this.RaiseAndSetIfChanged(ref _isDamaging, value); }
+        public int Damage { get => _damage; set => this.RaiseAndSetIfChanged(ref _damage, value); }
         public double X
         {
             get => _x;
@@ -38,12 +41,15 @@ namespace GameApp.Core.Models
         public double CenterX => X + Width / 2;
         public double CenterY => Y + Height / 2;
 
-        public Platform(double x, double y, double width, double height)
+        public Platform(double x, double y, double width, double height, bool isDamaging, int damage)
         {
             X = x;
             Y = y;
             Width = width;
             Height = height;
+
+            _isDamaging = isDamaging;
+            _damage = damage;
 
             // Подписываемся на изменения размеров
             this.WhenAnyValue(p => p.Width).Subscribe(_ => UpdateSize());
