@@ -16,6 +16,7 @@ namespace GameApp.Core.Models
         private int _maxHealth = 5;
         private int _currentHealth = 5;
 
+        public bool IsInvincible => _invincibilityRemaining > 0;
         private double _invincibilityRemaining = 0;  // Время неуязвимости после дамага
         private const double InvincibilityDuration = 0.5;  // 0.5 сек
 
@@ -49,6 +50,9 @@ namespace GameApp.Core.Models
         public void TakeDamage(int amount, double knockbackX = 0, double knockbackY = 0)
         {
             if (amount <= 0) return;
+
+            if (_invincibilityRemaining > 0)
+                return;
 
             _currentHealth = Math.Max(0, _currentHealth - amount);
             VelocityX += knockbackX;  // Отбрасывание по X (например, в сторону от врага)

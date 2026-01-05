@@ -288,6 +288,7 @@ namespace GameApp.Core.ViewModels
                     }
 
                     _player.TakeDamage(enemy.Damage, knockbackX, knockbackY);
+                    break;
                 }
             }
         }
