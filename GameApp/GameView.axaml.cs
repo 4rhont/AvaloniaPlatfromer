@@ -24,10 +24,13 @@ namespace GameApp.Views
         private DispatcherTimer _gameTimer;
         private Stopwatch _stopwatch = new Stopwatch();
 
-        private readonly List<Control> _platformVisuals = new();
+        private readonly Dictionary<Platform, List<Control>> _platformVisualMap = new();
+        private readonly Dictionary<Platform, Control> _debugPlatformMap = new();
+        private const double VisibilityBuffer = 200;
+
         private Bitmap? _platformTexture;
 
-        private readonly List<Control> _debugPlatformRects = new();
+        
         private Avalonia.Controls.Shapes.Rectangle? _debugPlayerRect;
 
         public GameView(GameViewModel gameVM)
@@ -48,6 +51,8 @@ namespace GameApp.Views
                         var transform = (TranslateTransform)MainCanvas.RenderTransform!;
                         transform.X = -_gameVM.Camera.X;
                         transform.Y = -_gameVM.Camera.Y;
+
+                        UpdatePlatformVisibility();
                     });
                 });
 
@@ -78,6 +83,8 @@ namespace GameApp.Views
                 DrawDebugPlatforms();
                 DrawDebugPlayer();
             }
+
+            UpdatePlatformVisibility();
 
             Focusable = true;
             AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
@@ -113,28 +120,61 @@ namespace GameApp.Views
             _animationVM.NotifyRenderPositionChanged();
         }
 
+        private void UpdatePlatformVisibility()
+        {
+            double left = _gameVM.Camera.X - VisibilityBuffer;
+            double top = _gameVM.Camera.Y - VisibilityBuffer;
+            double right = _gameVM.Camera.X + _gameVM.Camera.ViewportWidth + VisibilityBuffer;
+            double bottom = _gameVM.Camera.Y + _gameVM.Camera.ViewportHeight + VisibilityBuffer;
+
+            foreach (var kvp in _platformVisualMap)
+            {
+                var platform = kvp.Key;
+                var visuals = kvp.Value;
+
+                bool isVisible = platform.X < right && platform.Right > left && platform.Y < bottom && platform.Bottom > top;
+
+                foreach (var visual in visuals)
+                {
+                    visual.IsVisible = isVisible;
+                }
+            }
+
+            if (_gameVM.IsDebugMode)
+            {
+                foreach (var kvp in _debugPlatformMap)
+                {
+                    var platform = kvp.Key;
+                    var rect = kvp.Value;
+
+                    bool isVisible = platform.X < right && platform.Right > left && platform.Y < bottom && platform.Bottom > top;
+
+                    rect.IsVisible = isVisible;
+                }
+            }
+        }
+
         // Остальной код без изменений (DrawDebugPlatforms, DrawDebugPlayer, LoadPlatformTexture, CreatePlatforms, AddTile, AddRectanglePlatform, OnKeyDown, OnKeyUp, ConvertKeyToAction)
         private void DrawDebugPlatforms()
         {
-            if (_debugPlatformRects.Count == 0)
+            if (_debugPlatformMap.Count > 0) return;
+
+            foreach (var p in _gameVM.Platforms)
             {
-                foreach (var p in _gameVM.Platforms)
+                var rect = new Avalonia.Controls.Shapes.Rectangle
                 {
-                    var rect = new Avalonia.Controls.Shapes.Rectangle
-                    {
-                        Width = p.Width,
-                        Height = p.Height,
-                        Stroke = new SolidColorBrush(Colors.Red),
-                        StrokeThickness = 2,
-                        Fill = null
-                    };
+                    Width = p.Width,
+                    Height = p.Height,
+                    Stroke = new SolidColorBrush(Colors.Red),
+                    StrokeThickness = 2,
+                    Fill = null
+                };
 
-                    Canvas.SetLeft(rect, p.X);
-                    Canvas.SetTop(rect, p.Y);
+                Canvas.SetLeft(rect, p.X);
+                Canvas.SetTop(rect, p.Y);
 
-                    DebugCanvas.Children.Add(rect);
-                    _debugPlatformRects.Add(rect);
-                }
+                DebugCanvas.Children.Add(rect);
+                _debugPlatformMap[p] = rect;
             }
         }
 
@@ -174,13 +214,26 @@ namespace GameApp.Views
 
         private void CreatePlatforms()
         {
-            if (_platformVisuals.Count > 0) return;
+            //if (_platformVisuals.Count > 0) return;
 
             foreach (var platform in _gameVM.Platforms)
             {
+                var visuals = new List<Control>();
+
                 if (_platformTexture == null)
                 {
-                    AddRectanglePlatform(platform);
+                    var rect = new Avalonia.Controls.Shapes.Rectangle
+                    {
+                        Width = platform.Width,
+                        Height = platform.Height,
+                        Fill = new SolidColorBrush(Colors.Green),
+                        Stroke = new SolidColorBrush(Colors.DarkGreen),
+                        StrokeThickness = 2
+                    };
+                    Canvas.SetLeft(rect, platform.X);
+                    Canvas.SetTop(rect, platform.Y);
+                    MainCanvas.Children.Add(rect);
+                    visuals.Add(rect);
                     continue;
                 }
 
@@ -197,42 +250,25 @@ namespace GameApp.Views
                         double w = Math.Min(tileW, platform.Width - x * tileW);
                         double h = Math.Min(tileH, platform.Height - y * tileH);
 
-                        AddTile(platform.X + x * tileW, platform.Y + y * tileH, w, h);
+                        var tile = new Image
+                        {
+                            Source = _platformTexture,
+                            Width = w,
+                            Height = h,
+                            Stretch = Stretch.None
+                        };
+                        Canvas.SetLeft(tile, platform.X + x * tileW);
+                        Canvas.SetTop(tile, platform.Y + y * tileH);
+                        MainCanvas.Children.Add(tile);
+                        visuals.Add(tile);
                     }
                 }
+
+                _platformVisualMap[platform] = visuals;
             }
         }
 
-        private void AddTile(double left, double top, double width, double height)
-        {
-            var tile = new Image
-            {
-                Source = _platformTexture,
-                Width = width,
-                Height = height,
-                Stretch = Stretch.None
-            };
-            Canvas.SetLeft(tile, left);
-            Canvas.SetTop(tile, top);
-            MainCanvas.Children.Add(tile);
-            _platformVisuals.Add(tile);
-        }
-
-        private void AddRectanglePlatform(Platform platform)
-        {
-            var rect = new Avalonia.Controls.Shapes.Rectangle
-            {
-                Width = platform.Width,
-                Height = platform.Height,
-                Fill = new SolidColorBrush(Colors.Green),
-                Stroke = new SolidColorBrush(Colors.DarkGreen),
-                StrokeThickness = 2
-            };
-            Canvas.SetLeft(rect, platform.X);
-            Canvas.SetTop(rect, platform.Y);
-            MainCanvas.Children.Add(rect);
-            _platformVisuals.Add(rect);
-        }
+        
 
         private void OnKeyDown(object? sender, KeyEventArgs e)
         {
