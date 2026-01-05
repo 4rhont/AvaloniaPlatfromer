@@ -85,6 +85,17 @@ namespace GameApp.Views
             LoadPlatformTexture();
             CreatePlatforms();
 
+            var foregroundImage = new Image
+            {
+                Source = new Bitmap(AssetLoader.Open(new Uri("avares://GameApp/Assets/foreground.png"))),
+                Width = 6666,
+                Height = 2000,
+                Stretch = Stretch.Fill,
+                IsHitTestVisible = false
+            };
+
+            MainCanvas.Children.Add(foregroundImage);
+
 
             if (_gameVM.IsDebugMode)
             {
