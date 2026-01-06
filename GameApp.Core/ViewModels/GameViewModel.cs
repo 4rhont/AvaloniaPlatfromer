@@ -87,8 +87,9 @@ namespace GameApp.Core.ViewModels
             foreach (var e in _enemies)
             {
                 lines.Add(
-                    $"[Enemy {enemyIndex}] X:{e.X:F1} Y:{e.Y:F1} HP:{e.Health}/{e.MaxHealth}"
+                    $"[Enemy {enemyIndex}] X:{e.X:F1} Y:{e.Y:F1} VelX:{e.VelocityX:F1} VelY:{e.VelocityY:F1} Dir:{e.Direction} OnGround:{e.IsOnGround} HP:{e.Health}/{e.MaxHealth}"
                 );
+
                 enemyIndex++;
             }
 
@@ -251,20 +252,43 @@ namespace GameApp.Core.ViewModels
 
             _lastVelocityY = _player.VelocityY;
 
+
+            //новая физика для врагов, пока что здесь, потом инкапсулировать
             foreach (var enemy in _enemies)
             {
-                enemy.VelocityY += PhysicsService.Gravity * deltaTime;
-                enemy.Update(deltaTime);
+                enemy.IsOnGround = false; // Сброс перед проверками
 
+                if (!enemy.IsOnGround)
+                {
+                    enemy.VelocityY += PhysicsService.Gravity * deltaTime;
+                }
+
+                enemy.Update(deltaTime); // Обновляет VelocityX и X
+                enemy.X += enemy.VelocityX * deltaTime;
+
+                // Применяем VelocityY к Y
                 enemy.Y += enemy.VelocityY * deltaTime;
 
+                // Проверяем коллизии с платформами
                 foreach (var p in _platforms)
                 {
                     if (PhysicsService.CheckCollision(enemy, p))
                     {
-                        enemy.Y = p.Y - enemy.Height;
-                        enemy.VelocityY = 0;
+                        var colType = PhysicsService.GetCollisionType(enemy, p);
+                        PhysicsService.ResolveCollision(enemy, p, colType);
+                    }
+                }
+
+                // Простая проверка на землю (аналогично игроку, для стабильности)
+                double feetX = enemy.X + enemy.Width / 2;
+                double feetY = enemy.Y + enemy.Height;
+                foreach (var p in _platforms)
+                {
+                    bool withinX = feetX >= p.X && feetX <= p.X + p.Width;
+                    if (withinX && feetY >= p.Y - 3 && feetY <= p.Y + 3 && enemy.VelocityY >= 0)
+                    {
                         enemy.IsOnGround = true;
+                        break;
                     }
                 }
             }

@@ -27,10 +27,10 @@ namespace GameApp.Core.Services
 
         public static bool CheckCollision(Enemy enemy, Platform platform)
         {
-            return enemy.X < platform.Right &&
-                   enemy.Right > platform.X &&
-                   enemy.Y < platform.Bottom &&
-                   enemy.Bottom > platform.Y;
+            return enemy.X <= platform.Right &&
+                   enemy.Right >= platform.X &&
+                   enemy.Y <= platform.Bottom &&
+                   enemy.Bottom >= platform.Y;
         }
 
         public static CollisionType GetCollisionType(Player player, Platform platform)
@@ -96,6 +96,70 @@ namespace GameApp.Core.Services
             }
 
             return CollisionType.None;
+        }
+
+        public static CollisionType GetCollisionType(Enemy enemy, Platform platform)
+        {
+            var enemyBottom = enemy.Bottom;
+            var enemyRight = enemy.Right;
+            var platformBottom = platform.Y + platform.Height;
+            var platformRight = platform.X + platform.Width;
+
+            var overlapLeft = enemyRight - platform.X;
+            var overlapRight = platformRight - enemy.X;
+            var overlapTop = enemyBottom - platform.Y;
+            var overlapBottom = platformBottom - enemy.Y;
+
+            var minOverlap = Math.Min(Math.Min(overlapLeft, overlapRight),
+                                      Math.Min(overlapTop, overlapBottom));
+
+            if (minOverlap == overlapTop)
+            {
+                return CollisionType.Top;
+            }
+            else if (minOverlap == overlapBottom)
+            {
+                return CollisionType.Bottom;
+            }
+            else if (minOverlap == overlapLeft || minOverlap == overlapRight)
+            {
+                return CollisionType.Side;
+            }
+
+            return CollisionType.None;
+        }
+
+        public static void ResolveCollision(Enemy enemy, Platform platform, CollisionType type)
+        {
+            switch (type)
+            {
+                case CollisionType.Top:
+                    // Враг "приземляется" на платформу
+                    enemy.Y = platform.Y - enemy.Height;
+                    enemy.VelocityY = 0;
+                    enemy.IsOnGround = true;
+                    break;
+
+                case CollisionType.Bottom:
+                    // Враг ударяется "головой"
+                    enemy.Y = platform.Y + platform.Height;
+                    enemy.VelocityY = 0;
+                    break;
+
+                case CollisionType.Side:
+                    // Разворот при ударе в стену
+                    if (enemy.CenterX < platform.CenterX) // Слева от платформы
+                    {
+                        enemy.X = platform.X - enemy.Width - 1; // Отодвинуть на 1px
+                    }
+                    else // Справа
+                    {
+                        enemy.X = platform.X + platform.Width + 1;
+                    }
+                    System.Diagnostics.Debug.WriteLine($"Enemy side collision at X={enemy.X:F1}, turning Dir to {enemy.Direction}");
+                    enemy.VelocityX = -enemy.VelocityX; // Разворот (инвертируем скорость для мгновенного изменения)
+                    break;
+            }
         }
 
         public static void ResolveCollision(Player player, Platform platform, CollisionType type)

@@ -19,6 +19,7 @@ namespace GameApp.Core.Models
         private double _speed = 200;
         private int _direction = 1;
 
+        public int Direction => _direction;
         public double X { get => _x; set => this.RaiseAndSetIfChanged(ref _x, value); }
         public double Y { get => _y; set => this.RaiseAndSetIfChanged(ref _y, value); }
         public double Width { get => _width; set => this.RaiseAndSetIfChanged(ref _width, value); }
@@ -61,14 +62,12 @@ namespace GameApp.Core.Models
 
         public void Update(double deltaTime)
         {
-            VelocityX = _direction * _speed;
-
-            X += VelocityX * deltaTime;
-
             if (X > _startX + _patrolRange)
                 _direction = -1;
             else if (X < _startX - _patrolRange)
                 _direction = 1;
+
+            VelocityX = _direction * _speed;
         }
     }
 }
