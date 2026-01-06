@@ -24,6 +24,7 @@ namespace GameApp.Core.ViewModels
 
         private double _spawnX;
         private double _spawnY;
+        Platform? currentPlatform = null;
 
         public event Action? OnAttackTriggered; //атака
 
@@ -89,7 +90,7 @@ namespace GameApp.Core.ViewModels
                 lines.Add(
                     $"[Enemy {enemyIndex}] X:{e.X:F1} Y:{e.Y:F1} VelX:{e.VelocityX:F1} VelY:{e.VelocityY:F1} Dir:{e.Direction} OnGround:{e.IsOnGround} HP:{e.Health}/{e.MaxHealth}"
                 );
-
+                lines.Add($"Is on ground: {e.IsOnGround}, Is jumping: {e.IsJumping}");
                 enemyIndex++;
             }
 
@@ -259,8 +260,10 @@ namespace GameApp.Core.ViewModels
             //новая физика для врагов, пока что здесь, потом инкапсулировать
             foreach (var enemy in _enemies)
             {
+                currentPlatform = null;
+
                 bool wasOnGround = enemy.IsOnGround;  // Запоминаем предыдущее состояние
-                enemy.IsOnGround = false; // Сброс перед проверками
+                //enemy.IsOnGround = false; // Сброс перед проверками
 
                 if (!enemy.IsOnGround)
                 {
@@ -292,20 +295,22 @@ namespace GameApp.Core.ViewModels
                     if (withinX && feetY >= p.Y - 3 && feetY <= p.Y + 3 && enemy.VelocityY >= 0)
                     {
                         enemy.IsOnGround = true;
+                        currentPlatform = p;
                         break;
                     }
                 }
+                enemy.IsOnGround = currentPlatform != null;
 
                 // НОВАЯ ЛОГИКА: Проверка при приземлении
                 if (enemy.IsOnGround && !wasOnGround && enemy.IsJumping)
                 {
                     // Только что приземлился после прыжка
-                    if (Math.Abs(enemy.Y - enemy.JumpStartY) < Enemy.JumpHeightThreshold)
+                    if (currentPlatform == enemy.JumpStartPlatform)
                     {
                         // Не смог залезть — упал на то же место (тот же уровень Y)
-                        enemy.Direction = -(int)enemy.JumpStartDirection;  // Разворот относительно стартового направления
-                        enemy.VelocityX = enemy.Direction * 200;  // Обновляем скорость
-                                                                   // System.Diagnostics.Debug.WriteLine($"Enemy failed jump, reversing at X={enemy.X:F1}, Y={enemy.Y:F1}");
+                        enemy.Direction = -enemy.JumpStartDirection;
+                        enemy.VelocityX = enemy.Direction * 200;
+                        // System.Diagnostics.Debug.WriteLine($"Enemy failed jump, reversing at X={enemy.X:F1}, Y={enemy.Y:F1}");
                     }
                     else
                     {

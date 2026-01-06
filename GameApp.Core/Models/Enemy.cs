@@ -20,7 +20,7 @@ namespace GameApp.Core.Models
         private double _speed = 100;
         private int _direction = 1;
         private const double JumpVelocity = -600;
-
+        public Platform? JumpStartPlatform { get; set; }
         public bool IsJumping { get; set; } = false;
         public double JumpStartY { get; set; }
 
@@ -28,7 +28,7 @@ namespace GameApp.Core.Models
 
         public const double JumpHeightThreshold = 20; // Порог для проверки "того же места" по Y
 
-        public double JumpStartDirection { get; set; }  // Направление на момент старта прыжка
+        public int JumpStartDirection { get; set; }  // Направление на момент старта прыжка
         public double X { get => _x; set => this.RaiseAndSetIfChanged(ref _x, value); }
         public double Y { get => _y; set => this.RaiseAndSetIfChanged(ref _y, value); }
         public double Width { get => _width; set => this.RaiseAndSetIfChanged(ref _width, value); }
