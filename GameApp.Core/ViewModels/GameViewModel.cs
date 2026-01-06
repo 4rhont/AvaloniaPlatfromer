@@ -163,14 +163,17 @@ namespace GameApp.Core.ViewModels
 
             foreach (var e in level.Enemies)
             {
-                _enemies.Add(new Enemy(
-                    e.X,
-                    e.Y,
-                    e.Width,
-                    e.Height,
-                    e.Damage,
-                    e.Health
-                ));
+                //_enemies.Add(new Enemy(  // Старый код
+                //    e.X,
+                //    e.Y,
+                //    e.Width,
+                //    e.Height,
+                //    e.Damage,
+                //    e.Health
+                //));
+
+                // Новый: используем EnemyData напрямую
+                _enemies.Add(new Enemy(e));  // Теперь с поддержкой Direction и PatrolRange
             }
 
             _currentLevelId = level.Id;
@@ -300,8 +303,8 @@ namespace GameApp.Core.ViewModels
                     if (Math.Abs(enemy.Y - enemy.JumpStartY) < Enemy.JumpHeightThreshold)
                     {
                         // Не смог залезть — упал на то же место (тот же уровень Y)
-                        enemy._direction = -(int)enemy.JumpStartDirection;  // Разворот относительно стартового направления
-                        enemy.VelocityX = enemy._direction * 200;  // Обновляем скорость
+                        enemy.Direction = -(int)enemy.JumpStartDirection;  // Разворот относительно стартового направления
+                        enemy.VelocityX = enemy.Direction * 200;  // Обновляем скорость
                                                                    // System.Diagnostics.Debug.WriteLine($"Enemy failed jump, reversing at X={enemy.X:F1}, Y={enemy.Y:F1}");
                     }
                     else

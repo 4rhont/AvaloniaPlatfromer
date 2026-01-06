@@ -10,6 +10,8 @@ namespace GameApp.Core.Services
         public const double JumpVelocity = -800;
         public const double GroundFriction = 3000;
 
+        private const double VelocityEpsilon = 20.0;
+
         public static bool CheckCollision(Player player, Platform platform)
         {
             return player.X < platform.X + platform.Width &&
@@ -158,17 +160,17 @@ namespace GameApp.Core.Services
                     }
 
                     // Прыжок только если не в прыжке уже
-                    if (!enemy.IsJumping)
+                    if (!enemy.IsJumping && Math.Abs(enemy.VelocityY) < VelocityEpsilon)
                     {
                         // Попытка запрыгнуть
                         enemy.VelocityY = JumpVelocity;  // -600
                         enemy.IsOnGround = false;
                         enemy.IsJumping = true;
                         enemy.JumpStartY = enemy.Y;
-                        enemy.JumpStartDirection = enemy._direction;  // Запоминаем направление старта прыжка
+                        enemy.JumpStartDirection = enemy.Direction;  // Запоминаем направление старта прыжка
                         // System.Diagnostics.Debug.WriteLine($"Enemy starting jump at X={enemy.X:F1}, Y={enemy.Y:F1}, Dir={enemy.JumpStartDirection}");
                     }
-                    // Больше не разворачиваем здесь — проверка на неудачу будет при приземлении
+
                     break;
             }
         }

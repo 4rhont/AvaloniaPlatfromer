@@ -1,4 +1,5 @@
-﻿using ReactiveUI;
+﻿using GameApp.Core.Levels;
+using ReactiveUI;
 
 namespace GameApp.Core.Models
 {
@@ -16,16 +17,17 @@ namespace GameApp.Core.Models
 
         private double _startX;
         private double _patrolRange = 800;
-        private double _speed = 200;
-        public int _direction = 1;
+        private double _speed = 100;
+        private int _direction = 1;
         private const double JumpVelocity = -600;
 
         public bool IsJumping { get; set; } = false;
         public double JumpStartY { get; set; }
 
-        public int Direction => _direction;
+        public int Direction { get => _direction; set => this.RaiseAndSetIfChanged(ref _direction, value); }
 
-        public const double JumpHeightThreshold = 10;  // Порог для проверки "того же места" по Y
+        public const double JumpHeightThreshold = 20; // Порог для проверки "того же места" по Y
+
         public double JumpStartDirection { get; set; }  // Направление на момент старта прыжка
         public double X { get => _x; set => this.RaiseAndSetIfChanged(ref _x, value); }
         public double Y { get => _y; set => this.RaiseAndSetIfChanged(ref _y, value); }
@@ -67,6 +69,19 @@ namespace GameApp.Core.Models
 
             _startX = x;
             IsJumping = false;
+        }
+
+        public Enemy(EnemyData data) : this(data.X, data.Y, data.Width, data.Height, data.Damage, data.Health)
+        {
+            if (data.Direction.HasValue)
+            {
+                _direction = data.Direction.Value;
+            }
+
+            if (data.PatrolRange.HasValue)
+            {
+                _patrolRange = data.PatrolRange.Value;
+            }
         }
 
         public void Update(double deltaTime)
