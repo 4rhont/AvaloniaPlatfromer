@@ -68,15 +68,12 @@ namespace GameApp.ViewModels
         }
 
 
-        private double HandOffsetX = -5;
-        private double HandOffsetY = 5;
+        private double HandOffsetX = -1;
+        private double HandOffsetY = 1;
 
         private double MirrorCorrectionX = 0;
 
-        private double VisualOffsetX => IsFacingRight
-        ? (_player.Width - VisualWidth) / 2 + HandOffsetX
-        : (_player.Width - VisualWidth) / 2 + MirrorCorrectionX + HandOffsetY;  // MirrorCorrectionX - корректировка если сдвигается спрайт при повороте
-
+        private double VisualOffsetX => (_player.Width - VisualWidth) / 2 + HandOffsetX;
         private double VisualOffsetY => _player.Height - VisualHeight + HandOffsetY;
 
         private double _animationAccumulator = 0;
@@ -124,16 +121,6 @@ namespace GameApp.ViewModels
             // Автоматически обновляем позицию и направление при изменении в Player
             _player.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName == nameof(Player.X))
-                {
-                    OnPropertyChanged(nameof(VisualX));
-                    OnPropertyChanged(nameof(X));
-                }
-                if (e.PropertyName == nameof(Player.Y))
-                {
-                    OnPropertyChanged(nameof(VisualY));
-                    OnPropertyChanged(nameof(Y));
-                }
                 if (e.PropertyName == nameof(Player.IsOnGround)) OnPropertyChanged(nameof(IsOnGround));
                 if (e.PropertyName == nameof(Player.IsFacingRight)) IsFacingRight = _player.IsFacingRight;
             };
@@ -208,7 +195,6 @@ namespace GameApp.ViewModels
                 _animationAccumulator -= FrameInterval;
             }
 
-            IsFacingRight = _player.IsFacingRight;
         }
 
     }

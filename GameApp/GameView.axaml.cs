@@ -39,6 +39,7 @@ namespace GameApp.Views
 
         private Avalonia.Controls.Shapes.Rectangle? _debugPlayerRect;
 
+
         public GameView(GameViewModel gameVM)
         {
             _gameVM = gameVM;
@@ -76,6 +77,8 @@ namespace GameApp.Views
             }
 
             PlayerImage.DataContext = _animationVM;
+            _gameVM.WhenAnyValue(vm => vm.InterpolationAlpha)
+    .Subscribe(_ => _animationVM.NotifyRenderPositionChanged());
             DataContext = _gameVM;
             gameVM.OnAttackTriggered += _animationVM.TriggerAttack;
 
@@ -85,16 +88,81 @@ namespace GameApp.Views
             LoadPlatformTexture();
             CreatePlatforms();
 
+            var bgFar = new Image
+            {
+                Source = new Bitmap(AssetLoader.Open(new Uri("avares://GameApp/Assets/background_far.png"))),
+                Width = 5000,        // игровые единицы
+                Height = 1500,
+                Stretch = Stretch.None, // не растягиваем, берём оригинальный размер
+                IsHitTestVisible = false
+            };
+            Canvas.SetLeft(bgFar, 0);
+            Canvas.SetTop(bgFar, 0);
+
+
+            MainCanvas.Children.Insert(0, bgFar);  // самый нижний слой
+
+            // Слой 2: средний
+            var bgMid = new Image
+            {
+                Source = new Bitmap(AssetLoader.Open(new Uri("avares://GameApp/Assets/background_mid.png"))),
+                Width = 5000,
+                Height = 1500,
+                Stretch = Stretch.UniformToFill,
+                IsHitTestVisible = false
+            };
+            Canvas.SetLeft(bgMid, 0);
+            Canvas.SetTop(bgMid, 0);
+            MainCanvas.Children.Insert(1, bgMid);  // выше дальнего
+
+            // Слой 3: ближний (быстрее)
+            var bgNear = new Image
+            {
+                Source = new Bitmap(AssetLoader.Open(new Uri("avares://GameApp/Assets/background_near.png"))),
+                Width = 5000,
+                Height = 1500,
+                Stretch = Stretch.UniformToFill,
+                IsHitTestVisible = false
+            };
+            Canvas.SetLeft(bgNear, 0);
+            Canvas.SetTop(bgNear, 0);
+            MainCanvas.Children.Insert(2, bgNear);  // выше среднего
+
             var foregroundImage = new Image
             {
                 Source = new Bitmap(AssetLoader.Open(new Uri("avares://GameApp/Assets/foreground.png"))),
-                Width = 6666,
-                Height = 2000,
-                Stretch = Stretch.Fill,
+                Width = 5000,
+                Height = 1500,
+                Stretch = Stretch.UniformToFill,
                 IsHitTestVisible = false
             };
+            Canvas.SetLeft(foregroundImage, 0);
+            Canvas.SetTop(foregroundImage, 0);
 
             MainCanvas.Children.Add(foregroundImage);
+
+            // === PARALLAX: двигаем слои с разной скоростью ===
+            _gameVM.Camera.WhenAnyValue(c => c.X, c => c.Y)
+                .Subscribe(_ =>
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        // Основной мир (платформы, игрок)
+                        var transform = (TranslateTransform)MainCanvas.RenderTransform!;
+                        transform.X = -_gameVM.Camera.X;
+                        transform.Y = -_gameVM.Camera.Y;
+
+                        // Parallax для фонов
+                        Canvas.SetLeft(bgFar, -_gameVM.Camera.X * 0.1);   // очень медленно
+                        Canvas.SetLeft(bgMid, -_gameVM.Camera.X * 0.12);   // средне
+                        Canvas.SetLeft(bgNear, -_gameVM.Camera.X * 0.16);  // быстро
+
+
+                        UpdatePlatformVisibility();
+                        UpdateEnemyVisibility();
+                    });
+                });
+
 
 
             if (_gameVM.IsDebugMode)
@@ -337,7 +405,28 @@ namespace GameApp.Views
             }
         }
 
-        
+        private Image CreateParallaxBackground(string assetPath, double scaleFactor)
+        {
+            var image = new Image
+            {
+                Source = new Bitmap(AssetLoader.Open(new Uri(assetPath))),
+                Width = 10000,   // большая ширина для покрытия уровня
+                Height = 3000,   // большая высота
+                Stretch = Stretch.UniformToFill,
+                IsHitTestVisible = false,
+                RenderTransformOrigin = new RelativePoint(0, 1, RelativeUnit.Relative)  // ТОЧКА МАСШТАБА: левый нижний угол
+            };
+
+            // Масштабирование от низа
+            var scale = new ScaleTransform(scaleFactor, scaleFactor);
+            image.RenderTransform = scale;
+
+            // Прижимаем к левому нижнему углу
+            Canvas.SetLeft(image, 0);
+            Canvas.SetBottom(image, 0);
+
+            return image;
+        }
 
         private void OnKeyDown(object? sender, KeyEventArgs e)
         {
