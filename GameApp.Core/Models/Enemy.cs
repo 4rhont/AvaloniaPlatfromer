@@ -18,8 +18,15 @@ namespace GameApp.Core.Models
         private double _patrolRange = 800;
         private double _speed = 200;
         public int _direction = 1;
+        private const double JumpVelocity = -600;
+
+        public bool IsJumping { get; set; } = false;
+        public double JumpStartY { get; set; }
 
         public int Direction => _direction;
+
+        public const double JumpHeightThreshold = 10;  // Порог для проверки "того же места" по Y
+        public double JumpStartDirection { get; set; }  // Направление на момент старта прыжка
         public double X { get => _x; set => this.RaiseAndSetIfChanged(ref _x, value); }
         public double Y { get => _y; set => this.RaiseAndSetIfChanged(ref _y, value); }
         public double Width { get => _width; set => this.RaiseAndSetIfChanged(ref _width, value); }
@@ -49,6 +56,7 @@ namespace GameApp.Core.Models
 
         public Enemy(double x, double y, double width, double height, int damage, int health)
         {
+            JumpStartDirection = 0;
             X = x;
             Y = y;
             Width = width;
@@ -58,6 +66,7 @@ namespace GameApp.Core.Models
             MaxHealth = health;
 
             _startX = x;
+            IsJumping = false;
         }
 
         public void Update(double deltaTime)

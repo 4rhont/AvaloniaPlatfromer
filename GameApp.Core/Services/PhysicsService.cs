@@ -147,7 +147,7 @@ namespace GameApp.Core.Services
                     break;
 
                 case CollisionType.Side:
-                    // Разворот при ударе в стену
+                    // Отодвигаем всегда, чтобы не застревать
                     if (enemy.CenterX < platform.CenterX) // Слева от платформы
                     {
                         enemy.X = platform.X - enemy.Width - 1; // Отодвинуть на 1px
@@ -156,9 +156,19 @@ namespace GameApp.Core.Services
                     {
                         enemy.X = platform.X + platform.Width + 1;
                     }
-                    enemy._direction = -enemy._direction; // Invert direction to make the turn permanent
-                    enemy.VelocityX = enemy.Direction * 200; // Immediately apply new velocity (assuming Speed=200; make const accessible if needed)
-                    System.Diagnostics.Debug.WriteLine($"Enemy side collision at X={enemy.X:F1}, turning Dir to {enemy.Direction}");
+
+                    // Прыжок только если не в прыжке уже
+                    if (!enemy.IsJumping)
+                    {
+                        // Попытка запрыгнуть
+                        enemy.VelocityY = JumpVelocity;  // -600
+                        enemy.IsOnGround = false;
+                        enemy.IsJumping = true;
+                        enemy.JumpStartY = enemy.Y;
+                        enemy.JumpStartDirection = enemy._direction;  // Запоминаем направление старта прыжка
+                        // System.Diagnostics.Debug.WriteLine($"Enemy starting jump at X={enemy.X:F1}, Y={enemy.Y:F1}, Dir={enemy.JumpStartDirection}");
+                    }
+                    // Больше не разворачиваем здесь — проверка на неудачу будет при приземлении
                     break;
             }
         }

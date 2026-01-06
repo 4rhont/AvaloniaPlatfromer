@@ -256,6 +256,7 @@ namespace GameApp.Core.ViewModels
             //новая физика для врагов, пока что здесь, потом инкапсулировать
             foreach (var enemy in _enemies)
             {
+                bool wasOnGround = enemy.IsOnGround;  // Запоминаем предыдущее состояние
                 enemy.IsOnGround = false; // Сброс перед проверками
 
                 if (!enemy.IsOnGround)
@@ -290,6 +291,25 @@ namespace GameApp.Core.ViewModels
                         enemy.IsOnGround = true;
                         break;
                     }
+                }
+
+                // НОВАЯ ЛОГИКА: Проверка при приземлении
+                if (enemy.IsOnGround && !wasOnGround && enemy.IsJumping)
+                {
+                    // Только что приземлился после прыжка
+                    if (Math.Abs(enemy.Y - enemy.JumpStartY) < Enemy.JumpHeightThreshold)
+                    {
+                        // Не смог залезть — упал на то же место (тот же уровень Y)
+                        enemy._direction = -(int)enemy.JumpStartDirection;  // Разворот относительно стартового направления
+                        enemy.VelocityX = enemy._direction * 200;  // Обновляем скорость
+                                                                   // System.Diagnostics.Debug.WriteLine($"Enemy failed jump, reversing at X={enemy.X:F1}, Y={enemy.Y:F1}");
+                    }
+                    else
+                    {
+                        // Успех: залез выше или спустился — продолжаем в текущем направлении
+                        // System.Diagnostics.Debug.WriteLine($"Enemy successful jump, new Y={enemy.Y:F1} vs start {enemy.JumpStartY:F1}");
+                    }
+                    enemy.IsJumping = false;  // Сброс в любом случае
                 }
             }
 
