@@ -156,8 +156,9 @@ namespace GameApp.Core.Services
                     {
                         enemy.X = platform.X + platform.Width + 1;
                     }
+                    enemy._direction = -enemy._direction; // Invert direction to make the turn permanent
+                    enemy.VelocityX = enemy.Direction * 200; // Immediately apply new velocity (assuming Speed=200; make const accessible if needed)
                     System.Diagnostics.Debug.WriteLine($"Enemy side collision at X={enemy.X:F1}, turning Dir to {enemy.Direction}");
-                    enemy.VelocityX = -enemy.VelocityX; // Разворот (инвертируем скорость для мгновенного изменения)
                     break;
             }
         }

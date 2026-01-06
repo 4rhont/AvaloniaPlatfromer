@@ -17,7 +17,7 @@ namespace GameApp.Core.Models
         private double _startX;
         private double _patrolRange = 800;
         private double _speed = 200;
-        private int _direction = 1;
+        public int _direction = 1;
 
         public int Direction => _direction;
         public double X { get => _x; set => this.RaiseAndSetIfChanged(ref _x, value); }
