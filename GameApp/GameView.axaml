@@ -39,21 +39,21 @@
 			<ItemsControl ItemsSource="{Binding #gameView.EnemyViewModels}">
 				<ItemsControl.ItemsPanel>
 					<ItemsPanelTemplate>
-						<Canvas />
+						<Canvas Canvas.ZIndex="100" />
 					</ItemsPanelTemplate>
 				</ItemsControl.ItemsPanel>
+
 				<ItemsControl.ItemTemplate>
-					<DataTemplate>
+					<DataTemplate x:DataType="vmAnim:EnemyAnimationViewModel">
 						<Image Width="{Binding VisualWidth}"
 							   Height="{Binding VisualHeight}"
-							   Canvas.Left="{Binding VisualX}"
-							   Canvas.Top="{Binding VisualY}"
 							   Source="{Binding CurrentFrameBitmap}"
-							   Stretch="Uniform"
-							   RenderTransformOrigin="0.5,0.5"
-							   IsHitTestVisible="False">
+							   Stretch="UniformToFill">
 							<Image.RenderTransform>
-								<ScaleTransform ScaleX="{Binding EnemyScaleX}" ScaleY="1"/>
+								<TransformGroup>
+									<TranslateTransform X="{Binding VisualX}" Y="{Binding VisualY}"/>
+									<ScaleTransform ScaleX="{Binding EnemyScaleX}" ScaleY="1"/>
+								</TransformGroup>
 							</Image.RenderTransform>
 						</Image>
 					</DataTemplate>

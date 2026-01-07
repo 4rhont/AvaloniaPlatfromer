@@ -4,9 +4,9 @@ namespace GameApp.Core.Services
 {
     public static class PhysicsService
     {
-        public const double Gravity = 900;
+        public const double Gravity = 700;
         public const double MoveAcceleration = 1200;
-        public const double MaxMoveSpeed = 300;
+        public const double MaxMoveSpeed = 320;
         public const double JumpVelocity = -800;
         public const double GroundFriction = 3000;
 

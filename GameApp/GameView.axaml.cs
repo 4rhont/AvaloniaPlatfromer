@@ -35,6 +35,7 @@ namespace GameApp.Views
         private const double VisibilityBuffer = 200;
 
         private Bitmap? _platformTexture;
+        private Bitmap? _damagingPlatformTexture;
 
         // Пока что неп юзается, на будущее:
         private readonly Dictionary<Enemy, Image> _enemyVisualMap = new();
@@ -50,8 +51,22 @@ namespace GameApp.Views
             _animationVM = new PlayerAnimationViewModel(_gameVM.Player, _gameVM);
 
             InitializeComponent();
+            Debug.WriteLine($"=== ВРАГ ===");
+            Debug.WriteLine($"Координаты: X={_gameVM.Enemies[0].X}, Y={_gameVM.Enemies[0].Y}");
+            Debug.WriteLine($"Размеры: Width={_gameVM.Enemies[0].Width}, Height={_gameVM.Enemies[0].Height}");
+            Debug.WriteLine($"Камера: X={_gameVM.Camera.X}, Y={_gameVM.Camera.Y}");
 
+            // Принудительно сдвиньте врага ПЕРЕД КАМЕРОЙ
+            _gameVM.Enemies[0].X = _gameVM.Camera.X + 500;  // Правее камеры
+            _gameVM.Enemies[0].Y = _gameVM.Camera.Y + 300;  // Ниже камеры
+
+            Debug.WriteLine($"Враг перемещен в: X={_gameVM.Enemies[0].X}, Y={_gameVM.Enemies[0].Y}");
             MainCanvas.RenderTransform = new TranslateTransform();
+
+
+
+            PlayerImage.DataContext = _animationVM;
+            DataContext = _gameVM;
 
             // Подписка на камеру
             _gameVM.Camera.WhenAnyValue(c => c.X, c => c.Y)
@@ -80,11 +95,10 @@ namespace GameApp.Views
                     });
             }
 
-            PlayerImage.DataContext = _animationVM;
-            _gameVM.WhenAnyValue(vm => vm.InterpolationAlpha)
-    .Subscribe(_ => _animationVM.NotifyRenderPositionChanged());
 
-            DataContext = _gameVM;
+            _gameVM.WhenAnyValue(vm => vm.InterpolationAlpha).Subscribe(_ => _animationVM.NotifyRenderPositionChanged());
+
+
             gameVM.OnAttackTriggered += _animationVM.TriggerAttack;
 
             // Weather VM
@@ -92,12 +106,6 @@ namespace GameApp.Views
 
             LoadPlatformTexture();
             CreatePlatforms();
-
-            foreach (var enemy in _gameVM.Enemies)
-            {
-                var animVM = new EnemyAnimationViewModel(enemy, _gameVM);
-                EnemyViewModels.Add(animVM);  // ← теперь правильно
-            }
 
 
             var bgFar = new Image
@@ -139,6 +147,89 @@ namespace GameApp.Views
             Canvas.SetLeft(bgNear, 0);
             Canvas.SetTop(bgNear, 0);
             MainCanvas.Children.Insert(2, bgNear);  // выше среднего
+
+            foreach (var enemy in _gameVM.Enemies)
+            {
+                var animVM = new EnemyAnimationViewModel(enemy, _gameVM);
+                EnemyViewModels.Add(animVM);
+
+                // Создаем Image для врага
+                var enemyImage = new Image
+                {
+                    Width = 150,
+                    Height = 150,
+                    Source = animVM.CurrentFrameBitmap,
+                    Stretch = Stretch.UniformToFill,
+                    Opacity = 1.0,
+                    IsHitTestVisible = false
+                };
+
+                // Создаем ScaleTransform для зеркалирования
+                var scaleTransform = new ScaleTransform
+                {
+                    ScaleX = 1.0, // Начальное значение - смотрит вправо
+                    ScaleY = 1.0
+                };
+                enemyImage.RenderTransform = scaleTransform;
+                enemyImage.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
+
+                // Устанавливаем начальную позицию
+                Canvas.SetLeft(enemyImage, enemy.X);
+                Canvas.SetTop(enemyImage, enemy.Y);
+
+                MainCanvas.Children.Insert(3, enemyImage);
+
+                Debug.WriteLine($"Враг создан в ({enemy.X}, {enemy.Y})");
+
+                // ПОДПИСКА 1: на изменения позиции врага
+                enemy.PropertyChanged += (s, e) =>
+                {
+                    if (e.PropertyName == nameof(Enemy.X))
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            Canvas.SetLeft(enemyImage, enemy.X);
+                        });
+                    }
+                    if (e.PropertyName == nameof(Enemy.Y))
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            Canvas.SetTop(enemyImage, enemy.Y);
+                        });
+                    }
+
+                    // ЗЕРКАЛИРОВАНИЕ по VelocityX
+                    if (e.PropertyName == nameof(Enemy.VelocityX))
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            // Если VelocityX > 0 - смотрит вправо (ScaleX = 1)
+                            // Если VelocityX < 0 - смотрит влево (ScaleX = -1)
+                            // Если VelocityX = 0 - оставляем как есть
+                            if (Math.Abs(enemy.VelocityX) > 0.1) // Небольшой порог для устранения дребезга
+                            {
+                                double scaleX = enemy.VelocityX > 0 ? -1.0 : 1.0;
+                                scaleTransform.ScaleX = scaleX;
+
+                                Debug.WriteLine($"Враг направление: VelocityX={enemy.VelocityX}, ScaleX={scaleX}");
+                            }
+                        });
+                    }
+                };
+
+                // ПОДПИСКА 2: на изменение анимации
+                animVM.PropertyChanged += (s, e) =>
+                {
+                    if (e.PropertyName == nameof(EnemyAnimationViewModel.CurrentFrameBitmap))
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            enemyImage.Source = animVM.CurrentFrameBitmap;
+                        });
+                    }
+                };
+            }
 
             var foregroundImage = new Image
             {
@@ -230,7 +321,6 @@ namespace GameApp.Views
 
         private void UpdateEnemyVisibility()
         {
-            if (!_gameVM.IsDebugMode) return;
 
             double left = _gameVM.Camera.X - VisibilityBuffer;
             double top = _gameVM.Camera.Y - VisibilityBuffer;
@@ -362,13 +452,28 @@ namespace GameApp.Views
         {
             try
             {
+                // Обычная текстура платформы
                 var uri = new Uri("avares://GameApp/Assets/platform.png");
                 _platformTexture = new Bitmap(AssetLoader.Open(uri));
+                Debug.WriteLine("Загружена обычная текстура платформы");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Texture load error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Texture load error (platform): {ex.Message}");
                 _platformTexture = null;
+            }
+
+            try
+            {
+                // Текстура платформы с уроном
+                var damagingUri = new Uri("avares://GameApp/Assets/spike.png");
+                _damagingPlatformTexture = new Bitmap(AssetLoader.Open(damagingUri));
+                Debug.WriteLine("Загружена текстура платформы с уроном");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Texture load error (damaging): {ex.Message}");
+                _damagingPlatformTexture = null;
             }
         }
 
@@ -380,14 +485,35 @@ namespace GameApp.Views
             {
                 var visuals = new List<Control>();
 
-                if (_platformTexture == null)
+                // ВЫБИРАЕМ ТЕКСТУРУ В ЗАВИСИМОСТИ ОТ ТИПА ПЛАТФОРМЫ
+                Bitmap? currentTexture = platform.IsDamaging
+                    ? _damagingPlatformTexture
+                    : _platformTexture;
+
+                if (currentTexture == null)
                 {
+                    // Если текстуры нет - цветные прямоугольники
+                    IBrush fillBrush;
+                    IBrush strokeBrush;
+
+                    if (platform.IsDamaging)
+                    {
+                        fillBrush = new SolidColorBrush(Colors.Red);
+                        strokeBrush = new SolidColorBrush(Colors.DarkRed);
+                        Debug.WriteLine($"Платформа с уроном (цветная): ({platform.X}, {platform.Y})");
+                    }
+                    else
+                    {
+                        fillBrush = new SolidColorBrush(Colors.Green);
+                        strokeBrush = new SolidColorBrush(Colors.DarkGreen);
+                    }
+
                     var rect = new Avalonia.Controls.Shapes.Rectangle
                     {
                         Width = platform.Width,
                         Height = platform.Height,
-                        Fill = new SolidColorBrush(Colors.Green),
-                        Stroke = new SolidColorBrush(Colors.DarkGreen),
+                        Fill = fillBrush,
+                        Stroke = strokeBrush,
                         StrokeThickness = 2
                     };
                     Canvas.SetLeft(rect, platform.X);
@@ -397,11 +523,16 @@ namespace GameApp.Views
                     continue;
                 }
 
-                double tileW = _platformTexture.PixelSize.Width;
-                double tileH = _platformTexture.PixelSize.Height;
+                // Текстурированные платформы
+                double tileW = currentTexture.PixelSize.Width;
+                double tileH = currentTexture.PixelSize.Height;
 
                 int tilesX = (int)Math.Ceiling(platform.Width / tileW);
                 int tilesY = (int)Math.Ceiling(platform.Height / tileH);
+
+                Debug.WriteLine($"Создание платформы: X={platform.X}, Y={platform.Y}, " +
+                               $"W={platform.Width}, H={platform.Height}, " +
+                               $"Damaging={platform.IsDamaging}, Tiles={tilesX}x{tilesY}");
 
                 for (int x = 0; x < tilesX; x++)
                 {
@@ -412,7 +543,7 @@ namespace GameApp.Views
 
                         var tile = new Image
                         {
-                            Source = _platformTexture,
+                            Source = currentTexture,
                             Width = w,
                             Height = h,
                             Stretch = Stretch.None

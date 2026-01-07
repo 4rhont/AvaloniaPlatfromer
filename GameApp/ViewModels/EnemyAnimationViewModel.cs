@@ -36,25 +36,8 @@ namespace GameApp.ViewModels
         }
 
         // Интерполированные позиции для плавности
-        public double VisualX
-        {
-            get
-            {
-                double alpha = Math.Max(_gameVM.InterpolationAlpha, 0);
-                double x = _enemy.PrevX + (_enemy.X - _enemy.PrevX) * alpha;
-                return x + VisualOffsetX;
-            }
-        }
-
-        public double VisualY
-        {
-            get
-            {
-                double alpha = Math.Max(_gameVM.InterpolationAlpha, 0);
-                double y = _enemy.PrevY + (_enemy.Y - _enemy.PrevY) * alpha;
-                return y + VisualOffsetY;
-            }
-        }
+        public double VisualX => _enemy.X;
+        public double VisualY => _enemy.Y;
 
         public double VisualWidth => _enemy.Width;
         public double VisualHeight => _enemy.Height;

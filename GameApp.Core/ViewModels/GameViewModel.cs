@@ -238,6 +238,10 @@ namespace GameApp.Core.ViewModels
 
         private void UpdatePhysics(double deltaTime)
         {
+            foreach (var enemy in _enemies)
+            {
+                enemy.SavePreviousPosition();  // ← ЭТО ОЧЕНЬ ВАЖНО!
+            }
             ApplyGravity(deltaTime);
             HandleMovement(deltaTime);
             ApplyFriction(deltaTime);
