@@ -11,16 +11,9 @@ namespace GameApp.Core.Services
         public const double MaxMoveSpeed = 300;
         public const double JumpVelocity = -800;
         public const double GroundFriction = 3000;
-        public const double AttackDuration = 0.5;    // Длительность атаки (сек)
-        public const double AttackCooldown = 0.2;    // Кулдаун между атаками (сек)
 
-        public const double AttackHitboxWidth = 150.0;   // Ширина хитбокса
-        public const double AttackHitboxHeight = 100.0;  // Высота хитбокса
-        public const double AttackHitboxOffsetX = 0.0;  // Смещение по X от края игрока (для "вылета" вперед)
-        public const double AttackHitboxOffsetY = 50.0;  // Смещение по Y от верха игрока (для центрирования по высоте)
 
-        public const double EnemyKnockbackDuration = 0.5;  // Длительность отскока (сек)
-        public const double EnemyKnockbackFriction = 3000;  // Трение во время отскока 
+
 
         private const double VelocityEpsilon = 20.0;
 
@@ -51,20 +44,20 @@ namespace GameApp.Core.Services
             double progress = player.AttackProgress;
             if (progress <= 0) return false;  // Нет атаки или только старт (ширина=0)
 
-            double currentWidth = AttackHitboxWidth * progress;  // Линейный рост ширины от 0 до max
+            double currentWidth = Player.AttackHitboxWidth * progress;  // Линейный рост ширины от 0 до max
 
             // Позиция: фиксирована у ближней границы (у игрока), растяжение к дальней
             double hitboxX = player.IsFacingRight
-                ? player.Right + AttackHitboxOffsetX  // Начинается от правого края, растёт вправо
-                : player.X - currentWidth - AttackHitboxOffsetX;  // Начинается от левого края, растёт влево (hitboxX уменьшается)
+                ? player.Right + Player.AttackHitboxOffsetX  // Начинается от правого края, растёт вправо
+                : player.X - currentWidth - Player.AttackHitboxOffsetX;  // Начинается от левого края, растёт влево (hitboxX уменьшается)
 
-            double hitboxY = player.Y + AttackHitboxOffsetY;
+            double hitboxY = player.Y + Player.AttackHitboxOffsetY;
 
             // Проверка пересечения с врагом
             return hitboxX < enemy.Right &&
                    hitboxX + currentWidth > enemy.X &&
                    hitboxY < enemy.Bottom &&
-                   hitboxY + AttackHitboxHeight > enemy.Y;
+                   hitboxY + Player.AttackHitboxHeight > enemy.Y;
         }
 
         public static CollisionType GetCollisionType(Player player, Platform platform)

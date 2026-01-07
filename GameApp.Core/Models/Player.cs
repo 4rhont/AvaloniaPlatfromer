@@ -18,7 +18,30 @@ namespace GameApp.Core.Models
         private double _attackTimeElapsed = 0.0;
         private double _attackCooldownRemaining = 0.0;
         private readonly HashSet<Enemy> _hitEnemies = new HashSet<Enemy>();
-        public double AttackProgress => _isAttacking ? _attackTimeElapsed / PhysicsService.AttackDuration : 0;
+
+        public const double AttackDuration = 0.7;    // Длительность атаки (сек)
+        public const double AttackCooldown = 0.2;    // Кулдаун между атаками (сек)
+        public const double AttackDelay = 0.3; // задержка перед атакой
+
+        public const double AttackHitboxWidth = 80.0;   // Ширина хитбокса
+        public const double AttackHitboxHeight = 100.0;  // Высота хитбокса
+        public const double AttackHitboxOffsetX = 0.0;  // Смещение по X от края игрока (для "вылета" вперед)
+        public const double AttackHitboxOffsetY = 50.0;  // Смещение по Y от верха игрока (для центрирования по высоте)
+
+        public double AttackProgress
+        {
+            get
+            {
+                if (!_isAttacking) return 0;
+
+                if (_attackTimeElapsed < AttackDelay) return 0;
+
+                double effectiveTime = _attackTimeElapsed - AttackDelay;
+                double effectiveDuration = AttackDuration - AttackDelay;
+
+                return effectiveTime / effectiveDuration;
+            }
+        }
 
         public bool IsAttacking
         {
@@ -108,11 +131,14 @@ namespace GameApp.Core.Models
             if (_isAttacking)
             {
                 _attackTimeElapsed += deltaTime;
-                if (_attackTimeElapsed >= PhysicsService.AttackDuration)
+                this.RaisePropertyChanged(nameof(AttackProgress));
+
+                if (_attackTimeElapsed >= AttackDuration)
                 {
                     _isAttacking = false;
                     _attackTimeElapsed = 0.0;
-                    _attackCooldownRemaining = PhysicsService.AttackCooldown;
+                    //this.RaisePropertyChanged(nameof(AttackProgress));
+                    _attackCooldownRemaining = AttackCooldown;
                     _hitEnemies.Clear();  // Очистка после атаки
                 }
             }

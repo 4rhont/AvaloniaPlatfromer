@@ -81,7 +81,8 @@ namespace GameApp.Views
                     p => p.IsAttacking,
                     p => p.X,
                     p => p.Y,
-                    p => p.IsFacingRight
+                    p => p.IsFacingRight,
+                    p => p.AttackProgress
                 ).Subscribe(_ => Dispatcher.UIThread.Post(UpdateDebugAttackRect));
 
                 InitDebugAttackRect();
@@ -206,7 +207,7 @@ namespace GameApp.Views
             _debugAttackRect = new Avalonia.Controls.Shapes.Rectangle
             {
                 Width = 0,  // Начально 0, будет обновляться по прогрессу
-                Height = PhysicsService.AttackHitboxHeight,
+                Height = Player.AttackHitboxHeight,
                 Stroke = new SolidColorBrush(Colors.Yellow),
                 StrokeThickness = 2,
                 Fill = null,
@@ -224,13 +225,13 @@ namespace GameApp.Views
             }
 
             double progress = _gameVM.Player.AttackProgress;
-            double currentWidth = PhysicsService.AttackHitboxWidth * progress;
+            double currentWidth = Player.AttackHitboxWidth * progress;
 
             
             double hitboxX = _gameVM.Player.IsFacingRight
-                ? _gameVM.Player.Right + PhysicsService.AttackHitboxOffsetX
-                : _gameVM.Player.X - currentWidth - PhysicsService.AttackHitboxOffsetX;
-            double hitboxY = _gameVM.Player.Y + PhysicsService.AttackHitboxOffsetY;
+                ? _gameVM.Player.Right + Player.AttackHitboxOffsetX
+                : _gameVM.Player.X - currentWidth - Player.AttackHitboxOffsetX;
+            double hitboxY = _gameVM.Player.Y + Player.AttackHitboxOffsetY;
 
             _debugAttackRect.Width = currentWidth;
             Canvas.SetLeft(_debugAttackRect, hitboxX);

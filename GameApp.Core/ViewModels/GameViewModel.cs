@@ -363,7 +363,7 @@ namespace GameApp.Core.ViewModels
                     if (PhysicsService.CheckAttackHitboxCollision(_player, enemy) && !_player.HitEnemies.Contains(enemy))
                     {
                         // Рассчитываем отскок: в сторону от игрока + вверх
-                        double knockbackX = _player.IsFacingRight ? 800 : -800;  // Отлетает в сторону атаки
+                        double knockbackX = _player.IsFacingRight ? 600 : -600;  // Отлетает в сторону атаки
                         double knockbackY = -200;  // Подпрыгивает вверх
 
                         // Нанесение урона с отскоком

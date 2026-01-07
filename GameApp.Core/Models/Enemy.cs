@@ -23,6 +23,9 @@ namespace GameApp.Core.Models
         private double _speed = 100;
         private int _direction = 1;
         private const double JumpVelocity = -600;
+
+        public const double EnemyKnockbackDuration = 0.5;  // Длительность отскока (сек)
+        public const double EnemyKnockbackFriction = 3000;  // Трение во время отскока 
         //public Platform? JumpStartPlatform { get; set; }
         public bool IsJumping { get; set; } = false;
         public double JumpStartY { get; set; }
@@ -92,7 +95,7 @@ namespace GameApp.Core.Models
             Health = Math.Max(0, Health - amount);
             VelocityX += knockbackX;
             VelocityY += knockbackY;
-            _knockbackTimer = PhysicsService.EnemyKnockbackDuration;
+            _knockbackTimer = EnemyKnockbackDuration;
         }
 
         public void Update(double deltaTime)
