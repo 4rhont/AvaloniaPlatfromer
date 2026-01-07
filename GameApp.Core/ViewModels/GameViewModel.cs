@@ -362,9 +362,20 @@ namespace GameApp.Core.ViewModels
                     var enemy = _enemies[i];
                     if (PhysicsService.CheckAttackHitboxCollision(_player, enemy) && !_player.HitEnemies.Contains(enemy))
                     {
-                        // Нанесение урона
-                        enemy.Health -= Player.PlayerAttackDamage;
-                        _player.HitEnemies.Add(enemy);  // Чтобы не хитить повторно в этой атаке
+                        // Рассчитываем отскок: в сторону от игрока + вверх
+                        double knockbackX = _player.IsFacingRight ? 800 : -800;  // Отлетает в сторону атаки
+                        double knockbackY = -200;  // Подпрыгивает вверх
+
+                        // Нанесение урона с отскоком
+                        enemy.TakeDamage(Player.PlayerAttackDamage, knockbackX, knockbackY);
+
+                        // Сброс флага "на земле" для корректного применения гравитации после отскока
+                        enemy.IsOnGround = false;
+
+                        // Добавляем в HitEnemies, чтобы не бить повторно в этой атаке
+                        _player.HitEnemies.Add(enemy);
+
+                        // Проверяем смерть после TakeDamage
                         if (enemy.Health <= 0)
                         {
                             _enemies.RemoveAt(i);  // Удаляем мертвого врага

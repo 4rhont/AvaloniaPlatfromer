@@ -19,6 +19,9 @@ namespace GameApp.Core.Services
         public const double AttackHitboxOffsetX = 0.0;  // Смещение по X от края игрока (для "вылета" вперед)
         public const double AttackHitboxOffsetY = 50.0;  // Смещение по Y от верха игрока (для центрирования по высоте)
 
+        public const double EnemyKnockbackDuration = 0.5;  // Длительность отскока (сек)
+        public const double EnemyKnockbackFriction = 3000;  // Трение во время отскока 
+
         private const double VelocityEpsilon = 20.0;
 
         public static bool CheckCollision(Player player, Platform platform)

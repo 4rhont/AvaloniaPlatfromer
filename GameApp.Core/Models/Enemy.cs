@@ -1,4 +1,5 @@
 ﻿using GameApp.Core.Levels;
+using GameApp.Core.Services;
 using ReactiveUI;
 
 namespace GameApp.Core.Models
@@ -14,6 +15,8 @@ namespace GameApp.Core.Models
         private int _damage = 1;
         private int _health = 5;
         private int _maxHealth = 5;
+
+        private double _knockbackTimer = 0;
 
         private double _startX;
         private double _patrolRange = 800;
@@ -89,10 +92,31 @@ namespace GameApp.Core.Models
             Health = Math.Max(0, Health - amount);
             VelocityX += knockbackX;
             VelocityY += knockbackY;
+            _knockbackTimer = PhysicsService.EnemyKnockbackDuration;
         }
 
         public void Update(double deltaTime)
         {
+            if (_knockbackTimer > 0)
+            {
+                _knockbackTimer -= deltaTime;
+                if (_knockbackTimer < 0) _knockbackTimer = 0;
+
+                // Применяем фрикцию во время отскока (как у игрока)
+                if (IsOnGround)
+                {
+                    if (VelocityX > 0)
+                    {
+                        VelocityX = Math.Max(0, VelocityX - PhysicsService.GroundFriction * deltaTime);
+                    }
+                    else if (VelocityX < 0)
+                    {
+                        VelocityX = Math.Min(0, VelocityX + PhysicsService.GroundFriction * deltaTime);
+                    }
+                }
+                return;  // Пропускаем патруль логику
+            }
+
             if (X > _startX + _patrolRange)
                 _direction = -1;
             else if (X < _startX - _patrolRange)
