@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace GameApp.Views
 {
@@ -31,11 +32,13 @@ namespace GameApp.Views
         private readonly Dictionary<Platform, Control> _debugPlatformMap = new();
         private readonly Dictionary<Enemy, EnemyAnimationViewModel> _enemyAnimationMap = new();
 
+
         public ObservableCollection<EnemyAnimationViewModel> EnemyViewModels { get; } = new();
         private const double VisibilityBuffer = 200;
 
         private Bitmap? _platformTexture;
         private Bitmap? _damagingPlatformTexture;
+        private Bitmap? _hp5Texture, _hp4Texture, _hp3Texture, _hp2Texture, _hp1Texture;
 
         // Пока что неп юзается, на будущее:
         private readonly Dictionary<Enemy, Image> _enemyVisualMap = new();
@@ -51,19 +54,23 @@ namespace GameApp.Views
             _animationVM = new PlayerAnimationViewModel(_gameVM.Player, _gameVM);
 
             InitializeComponent();
-            Debug.WriteLine($"=== ВРАГ ===");
-            Debug.WriteLine($"Координаты: X={_gameVM.Enemies[0].X}, Y={_gameVM.Enemies[0].Y}");
-            Debug.WriteLine($"Размеры: Width={_gameVM.Enemies[0].Width}, Height={_gameVM.Enemies[0].Height}");
-            Debug.WriteLine($"Камера: X={_gameVM.Camera.X}, Y={_gameVM.Camera.Y}");
 
-            // Принудительно сдвиньте врага ПЕРЕД КАМЕРОЙ
-            _gameVM.Enemies[0].X = _gameVM.Camera.X + 500;  // Правее камеры
-            _gameVM.Enemies[0].Y = _gameVM.Camera.Y + 300;  // Ниже камеры
+            LoadHpTextures();
+            UpdateHpBar();
+            // Подписка на изменение здоровья игрока
+            _gameVM.Player.PropertyChanged += (s, e) =>
+            {
+                Debug.WriteLine($"Player PropertyChanged: {e.PropertyName} = {_gameVM.Player.CurrentHealth}");
 
-            Debug.WriteLine($"Враг перемещен в: X={_gameVM.Enemies[0].X}, Y={_gameVM.Enemies[0].Y}");
+                if (e.PropertyName == nameof(Player.CurrentHealth))
+                {
+                    Debug.WriteLine($"HP изменилось: {_gameVM.Player.CurrentHealth}/{_gameVM.Player.MaxHealth}");
+                    Dispatcher.UIThread.Post(UpdateHpBar);
+                }
+            };
+
+
             MainCanvas.RenderTransform = new TranslateTransform();
-
-
 
             PlayerImage.DataContext = _animationVM;
             DataContext = _gameVM;
@@ -242,8 +249,8 @@ namespace GameApp.Views
             Canvas.SetLeft(foregroundImage, 0);
             Canvas.SetTop(foregroundImage, 0);
 
-            //MainCanvas.Children.Add(foregroundImage);
-            MainCanvas.Children.Insert(3, foregroundImage);
+            MainCanvas.Children.Add(foregroundImage);
+            //MainCanvas.Children.Insert(3, foregroundImage);
 
 
             // === PARALLAX: двигаем слои с разной скоростью ===
@@ -448,6 +455,89 @@ namespace GameApp.Views
                 };
             }
         }
+
+
+
+        private void LoadHpTextures()
+        {
+            try
+            {
+                _hp5Texture = LoadTexture("5hp.png");
+                _hp4Texture = LoadTexture("4hp.png");
+                _hp3Texture = LoadTexture("3hp.png");
+                _hp2Texture = LoadTexture("2hp.png");
+                _hp1Texture = LoadTexture("1hp.png");
+
+                Debug.WriteLine("HP текстуры загружены");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Ошибка загрузки HP текстур: {ex.Message}");
+            }
+        }
+
+
+        private Bitmap? LoadTexture(string filename)
+        {
+            try
+            {
+                var uri = new Uri($"avares://GameApp/Assets/{filename}");
+                return new Bitmap(AssetLoader.Open(uri));
+            }
+            catch
+            {
+                Debug.WriteLine($"Файл {filename} не найден");
+                return null;
+            }
+        }
+
+        private void UpdateHpBar()
+        {
+            if (_gameVM?.Player == null || HpBarImage == null) return;
+
+            int currentHp = _gameVM.Player.CurrentHealth;
+
+            // Выбираем нужную текстуру
+            Bitmap? texture = currentHp switch
+            {
+                5 => _hp5Texture,
+                4 => _hp4Texture,
+                3 => _hp3Texture,
+                2 => _hp2Texture,
+                1 => _hp1Texture,
+                _ => _hp1Texture // Если HP < 1
+            };
+
+            if (texture != null)
+            {
+                HpBarImage.Source = texture;
+            }
+
+            // Анимация при получении урона
+            if (currentHp < 5)
+            {
+                Dispatcher.UIThread.Post(() => PulseHpBar());
+            }
+        }
+
+        private async void PulseHpBar()
+        {
+            if (HpBarImage == null) return;
+
+            // Можно добавить проверку, что здоровье действительно уменьшилось
+            if (_gameVM?.Player?.CurrentHealth < 5)
+            {
+                // Простая анимация пульсации
+                for (int i = 0; i < 3; i++)
+                {
+                    HpBarImage.Opacity = 0.5;
+                    await Task.Delay(100);
+                    HpBarImage.Opacity = 1.0;
+                    await Task.Delay(100);
+                }
+            }
+        }
+
         private void LoadPlatformTexture()
         {
             try

@@ -70,17 +70,44 @@
 
 		<!-- Debug overlay не двигается камерой -->
 		<Border HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Margin="10"
-                Background="#AA000000"
-                Padding="8"
-                CornerRadius="6"
-                IsHitTestVisible="False">
+				VerticalAlignment="Top"
+				Margin="10"
+				Background="#AA000000"
+				Padding="8"
+				CornerRadius="6"
+				IsHitTestVisible="False">
 			<TextBlock Width="500"
-                       Text="{Binding DebugInfo}"
-                       Foreground="White"
-                       FontSize="14"
-                       TextWrapping="Wrap"/>
+					   Text="{Binding DebugInfo}"
+					   Foreground="White"
+					   FontSize="14"
+					   TextWrapping="Wrap"/>
+		</Border>
+
+		<!-- HP Bar с текстом -->
+		<Border x:Name="HpBarContainer"
+				HorizontalAlignment="Left"
+				VerticalAlignment="Top"
+				Margin="20,20,0,0"
+				IsHitTestVisible="False">
+
+			<StackPanel Orientation="Horizontal"
+						VerticalAlignment="Center">
+
+				<!-- текст слева -->
+				<TextBlock x:Name="HpText"
+						   Text="HP"
+						   Foreground="White"
+						   FontSize="24"
+						   FontWeight="Bold"
+						   VerticalAlignment="Center"
+						   Margin="0,0,0,0"/>
+
+				<!-- картинка HP -->
+				<Image x:Name="HpBarImage"
+					   Width="300"
+					   Height="100"
+					   Stretch="Uniform"/>
+			</StackPanel>
 		</Border>
 
 		<!-- Подсказка по управлению -->

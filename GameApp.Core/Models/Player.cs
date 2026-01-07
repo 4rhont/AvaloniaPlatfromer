@@ -54,24 +54,22 @@ namespace GameApp.Core.Models
             if (_invincibilityRemaining > 0)
                 return;
 
-            _currentHealth = Math.Max(0, _currentHealth - amount);
+            CurrentHealth = Math.Max(0, _currentHealth - amount);
             VelocityX += knockbackX;  // Отбрасывание по X (например, в сторону от врага)
             VelocityY += knockbackY;  // Отбрасывание по Y (отрицательное для прыжка вверх)
             _invincibilityRemaining = InvincibilityDuration;
 
-            if (_currentHealth <= 0)
+            if (CurrentHealth <= 0)
             {
-                // Логика смерти: респаун на спавн-точку
-                X = _spawnX;  
+                X = _spawnX;
                 Y = _spawnY;
                 VelocityX = 0;
                 VelocityY = 0;
-                _currentHealth = _maxHealth;  // Восстановить здоровье после респауна
-                                              // Можно добавить событие OnDeath для анимации или UI
+                CurrentHealth = MaxHealth;
                 _invincibilityRemaining = 0;
             }
 
-            
+
         }
 
         public void Update(double deltaTime)
