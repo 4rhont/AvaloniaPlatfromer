@@ -1,11 +1,13 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
+using GameApp.Converters;
 using GameApp.Core.Input;
 using GameApp.Core.Models;
 using GameApp.Core.ViewModels;
@@ -27,7 +29,9 @@ namespace GameApp.Views
 
         private readonly Dictionary<Platform, List<Control>> _platformVisualMap = new();
         private readonly Dictionary<Platform, Control> _debugPlatformMap = new();
+        private readonly Dictionary<Enemy, EnemyAnimationViewModel> _enemyAnimationMap = new();
 
+        public ObservableCollection<EnemyAnimationViewModel> EnemyViewModels { get; } = new();
         private const double VisibilityBuffer = 200;
 
         private Bitmap? _platformTexture;
@@ -79,6 +83,7 @@ namespace GameApp.Views
             PlayerImage.DataContext = _animationVM;
             _gameVM.WhenAnyValue(vm => vm.InterpolationAlpha)
     .Subscribe(_ => _animationVM.NotifyRenderPositionChanged());
+
             DataContext = _gameVM;
             gameVM.OnAttackTriggered += _animationVM.TriggerAttack;
 
@@ -87,6 +92,13 @@ namespace GameApp.Views
 
             LoadPlatformTexture();
             CreatePlatforms();
+
+            foreach (var enemy in _gameVM.Enemies)
+            {
+                var animVM = new EnemyAnimationViewModel(enemy, _gameVM);
+                EnemyViewModels.Add(animVM);  // ← теперь правильно
+            }
+
 
             var bgFar = new Image
             {
@@ -139,7 +151,9 @@ namespace GameApp.Views
             Canvas.SetLeft(foregroundImage, 0);
             Canvas.SetTop(foregroundImage, 0);
 
-            MainCanvas.Children.Add(foregroundImage);
+            //MainCanvas.Children.Add(foregroundImage);
+            MainCanvas.Children.Insert(3, foregroundImage);
+
 
             // === PARALLAX: двигаем слои с разной скоростью ===
             _gameVM.Camera.WhenAnyValue(c => c.X, c => c.Y)
@@ -201,6 +215,11 @@ namespace GameApp.Views
             // Обновляем анимации и погоду
             _animationVM.UpdateAnimation(deltaTime);
 
+            foreach (var vm in EnemyViewModels)
+            {
+                vm.UpdateAnimation(deltaTime);
+            }
+
             if (WeatherLayer.DataContext is WeatherViewModel weatherVM)
             {
                 weatherVM.Update(deltaTime);
@@ -225,7 +244,11 @@ namespace GameApp.Views
                 bool isVisible = enemy.X < right && enemy.Right > left && enemy.Y < bottom && enemy.Bottom > top;
                 rect.IsVisible = isVisible;
             }
-        }
+            foreach (var vm in EnemyViewModels)
+            {
+                bool isVisible = vm.VisualX < right && (vm.VisualX + vm.VisualWidth) > left && vm.VisualY < bottom && (vm.VisualY + vm.VisualHeight) > top;
+            }
+         }
 
         private void UpdatePlatformVisibility()
         {
@@ -312,7 +335,7 @@ namespace GameApp.Views
                 {
                     Width = enemy.Width,
                     Height = enemy.Height,
-                    Fill = new SolidColorBrush(Colors.Purple), 
+                    Fill = null, 
                     Stroke = new SolidColorBrush(Colors.Violet),
                     StrokeThickness = 2
                 };

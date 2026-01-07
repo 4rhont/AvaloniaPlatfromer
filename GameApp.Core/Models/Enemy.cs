@@ -19,6 +19,18 @@ namespace GameApp.Core.Models
         private double _speed = 200;
         private int _direction = 1;
 
+        private double _prevX;
+        private double _prevY;
+
+        public double PrevX => _prevX;
+        public double PrevY => _prevY;
+
+        public void SavePreviousPosition()
+        {
+            _prevX = X;
+            _prevY = Y;
+        }
+
         public double X { get => _x; set => this.RaiseAndSetIfChanged(ref _x, value); }
         public double Y { get => _y; set => this.RaiseAndSetIfChanged(ref _y, value); }
         public double Width { get => _width; set => this.RaiseAndSetIfChanged(ref _width, value); }
