@@ -324,7 +324,25 @@ namespace GameApp.Core.ViewModels
                     }
                 }
 
-                // НОВАЯ ЛОГИКА: Проверка при приземлении
+                double deltaX = Math.Abs(enemy.X - enemy.PrevX);
+                if (deltaX < Enemy.StuckEpsilon && enemy.IsOnGround)
+                {
+                    enemy.StuckCounter++;
+                    if (enemy.StuckCounter >= Enemy.StuckThreshold)
+                    {
+                        enemy.Direction = -enemy.Direction;
+                        enemy.StuckCounter = 0;
+                        // Опционально: лёгкий "толчок" для выхода из застревания
+                        enemy.VelocityX = enemy.Direction * enemy.GetSpeedX * 0.5;  // 50% скорости, чтобы не застрял сразу
+                    }
+                }
+                else
+                {
+                    enemy.StuckCounter = 0;
+                }
+                enemy.PrevX = enemy.X;
+
+                // Проверка при приземлении
                 if (enemy.IsOnGround && !wasOnGround && enemy.IsJumping)
                 {
                     // Только что приземлился после прыжка
@@ -337,11 +355,12 @@ namespace GameApp.Core.ViewModels
                     }
                     else
                     {
-                        enemy.IsJumping = false;
+                        
                         // Успех: залез выше или спустился — продолжаем в текущем направлении
                         // System.Diagnostics.Debug.WriteLine($"Enemy successful jump, new Y={enemy.Y:F1} vs start {enemy.JumpStartY:F1}");
                     }
                     /*enemy.IsJumping = false;*/  // Сброс в любом случае
+                    enemy.IsJumping = false;
                 }
             }
 

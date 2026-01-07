@@ -24,6 +24,17 @@ namespace GameApp.Core.Models
         private int _direction = 1;
         private const double JumpVelocity = -600;
 
+        
+        public double GetSpeedX => _speed;
+
+        private double _prevX;
+        public double PrevX { get => _prevX; set => this.RaiseAndSetIfChanged(ref _prevX, value); }
+        public int GetStuckCounter => _stuckCounter;
+        public int StuckCounter { get => _stuckCounter; set => this.RaiseAndSetIfChanged(ref _stuckCounter, value); }
+        private int _stuckCounter = 0;
+        public const int StuckThreshold = 3;  // Кол-во кадров без движения для разворота
+        public const double StuckEpsilon = 1.0;  // Минимальное изменение X для "движения" (пиксели за кадр)
+
         public const double EnemyKnockbackDuration = 0.5;  // Длительность отскока (сек)
         public const double EnemyKnockbackFriction = 3000;  // Трение во время отскока 
         //public Platform? JumpStartPlatform { get; set; }
@@ -73,6 +84,7 @@ namespace GameApp.Core.Models
             Health = health;
             MaxHealth = health;
 
+            _prevX = x;
             _startX = x;
             IsJumping = false;
         }
@@ -88,6 +100,7 @@ namespace GameApp.Core.Models
             {
                 _patrolRange = data.PatrolRange.Value;
             }
+            _prevX = data.X;
         }
         public void TakeDamage(int amount, double knockbackX = 0, double knockbackY = 0)
         {
