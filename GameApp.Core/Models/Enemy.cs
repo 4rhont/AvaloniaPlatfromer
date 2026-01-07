@@ -20,7 +20,7 @@ namespace GameApp.Core.Models
         private double _speed = 100;
         private int _direction = 1;
         private const double JumpVelocity = -600;
-        public Platform? JumpStartPlatform { get; set; }
+        //public Platform? JumpStartPlatform { get; set; }
         public bool IsJumping { get; set; } = false;
         public double JumpStartY { get; set; }
 

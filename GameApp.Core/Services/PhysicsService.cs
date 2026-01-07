@@ -166,7 +166,7 @@ namespace GameApp.Core.Services
                         enemy.VelocityY = JumpVelocity;  // -600
                         enemy.IsOnGround = false;
                         enemy.IsJumping = true;
-                        enemy.JumpStartPlatform = platform;
+                        //enemy.JumpStartPlatform = platform;
                         enemy.JumpStartY = enemy.Y;
                         enemy.JumpStartDirection = enemy.Direction;  // Запоминаем направление старта прыжка
                         // System.Diagnostics.Debug.WriteLine($"Enemy starting jump at X={enemy.X:F1}, Y={enemy.Y:F1}, Dir={enemy.JumpStartDirection}");

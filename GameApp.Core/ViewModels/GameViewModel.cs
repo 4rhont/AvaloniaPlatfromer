@@ -270,23 +270,24 @@ namespace GameApp.Core.ViewModels
                     enemy.VelocityY += PhysicsService.Gravity * deltaTime;
                 }
 
-                enemy.Update(deltaTime); // Обновляет VelocityX и X
+                enemy.Update(deltaTime); // Обновляет VelocityX 
                 enemy.X += enemy.VelocityX * deltaTime;
 
                 // Применяем VelocityY к Y
                 enemy.Y += enemy.VelocityY * deltaTime;
 
-                // Проверяем коллизии с платформами
+                // Проверяем вертикальные коллизии с платформами
                 foreach (var p in _platforms)
                 {
                     if (PhysicsService.CheckCollision(enemy, p))
                     {
                         var colType = PhysicsService.GetCollisionType(enemy, p);
-                        PhysicsService.ResolveCollision(enemy, p, colType);
+                        if (colType == CollisionType.Top || colType == CollisionType.Bottom)
+                            PhysicsService.ResolveCollision(enemy, p, colType);
                     }
                 }
 
-                // Простая проверка на землю (аналогично игроку, для стабильности)
+                // Простая проверка на землю
                 double feetX = enemy.X + enemy.Width / 2;
                 double feetY = enemy.Y + enemy.Height;
                 foreach (var p in _platforms)
@@ -301,11 +302,22 @@ namespace GameApp.Core.ViewModels
                 }
                 enemy.IsOnGround = currentPlatform != null;
 
+                // проверка на горизонтальные коллизии
+                foreach (var p in _platforms)
+                {
+                    if (PhysicsService.CheckCollision(enemy, p))
+                    {
+                        var colType = PhysicsService.GetCollisionType(enemy, p);
+                        if (colType == CollisionType.Side)
+                            PhysicsService.ResolveCollision(enemy, p, colType);
+                    }
+                }
+
                 // НОВАЯ ЛОГИКА: Проверка при приземлении
                 if (enemy.IsOnGround && !wasOnGround && enemy.IsJumping)
                 {
                     // Только что приземлился после прыжка
-                    if (currentPlatform == enemy.JumpStartPlatform)
+                    if (Math.Abs(enemy.Y - enemy.JumpStartY) < Enemy.JumpHeightThreshold)
                     {
                         // Не смог залезть — упал на то же место (тот же уровень Y)
                         enemy.Direction = -enemy.JumpStartDirection;
@@ -314,10 +326,11 @@ namespace GameApp.Core.ViewModels
                     }
                     else
                     {
+                        enemy.IsJumping = false;
                         // Успех: залез выше или спустился — продолжаем в текущем направлении
                         // System.Diagnostics.Debug.WriteLine($"Enemy successful jump, new Y={enemy.Y:F1} vs start {enemy.JumpStartY:F1}");
                     }
-                    enemy.IsJumping = false;  // Сброс в любом случае
+                    /*enemy.IsJumping = false;*/  // Сброс в любом случае
                 }
             }
 
