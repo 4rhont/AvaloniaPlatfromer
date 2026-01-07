@@ -18,6 +18,7 @@ namespace GameApp.Core.Models
         private double _attackTimeElapsed = 0.0;
         private double _attackCooldownRemaining = 0.0;
         private readonly HashSet<Enemy> _hitEnemies = new HashSet<Enemy>();
+        public double AttackProgress => _isAttacking ? _attackTimeElapsed / PhysicsService.AttackDuration : 0;
 
         public bool IsAttacking
         {
