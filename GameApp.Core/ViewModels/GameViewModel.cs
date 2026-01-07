@@ -39,6 +39,7 @@ namespace GameApp.Core.ViewModels
         private double _fps = 0;
         private double _fpsTimer = 0;
 
+
         // Настройки FPS
         private const double FpsUpdateInterval = 0.5; // секунд
 
@@ -234,15 +235,11 @@ namespace GameApp.Core.ViewModels
             }
         }
 
+        private double _interpolationAlpha = 0.0;
         public double InterpolationAlpha
         {
-            get
-            {
-                if (FixedDelta <= 0)
-                    return 0;
-
-                return Math.Clamp(_accumulator / FixedDelta, 0.0, 1.0);
-            }
+            get => _interpolationAlpha;
+            private set => this.RaiseAndSetIfChanged(ref _interpolationAlpha, value);
         }
 
 
