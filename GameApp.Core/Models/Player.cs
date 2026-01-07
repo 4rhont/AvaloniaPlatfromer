@@ -1,4 +1,5 @@
-﻿using ReactiveUI;
+﻿using GameApp.Core.Services;
+using ReactiveUI;
 
 namespace GameApp.Core.Models
 {
@@ -12,6 +13,25 @@ namespace GameApp.Core.Models
         private bool _isFacingRight = true;
         private double _width = 120; 
         private double _height = 210;
+        private bool _isAttacking = false;
+        public const int PlayerAttackDamage = 1;
+        private double _attackTimeElapsed = 0.0;
+        private double _attackCooldownRemaining = 0.0;
+        private readonly HashSet<Enemy> _hitEnemies = new HashSet<Enemy>();
+
+        public bool IsAttacking
+        {
+            get => _isAttacking;
+            set => this.RaiseAndSetIfChanged(ref _isAttacking, value);
+        }
+
+        public HashSet<Enemy> HitEnemies => _hitEnemies;
+
+        public double AttackCooldownRemaining
+        {
+            get => _attackCooldownRemaining;
+            set => _attackCooldownRemaining = value;
+        }
 
         private int _maxHealth = 5;
         private int _currentHealth = 5;
@@ -74,12 +94,33 @@ namespace GameApp.Core.Models
             
         }
 
+
+
         public void Update(double deltaTime)
         {
             if (_invincibilityRemaining > 0)
             {
                 _invincibilityRemaining -= deltaTime;
                 if (_invincibilityRemaining < 0) _invincibilityRemaining = 0;
+            }
+
+            if (_isAttacking)
+            {
+                _attackTimeElapsed += deltaTime;
+                if (_attackTimeElapsed >= PhysicsService.AttackDuration)
+                {
+                    _isAttacking = false;
+                    _attackTimeElapsed = 0.0;
+                    _attackCooldownRemaining = PhysicsService.AttackCooldown;
+                    _hitEnemies.Clear();  // Очистка после атаки
+                }
+            }
+            
+            if (_attackCooldownRemaining > 0)
+            {
+                _attackCooldownRemaining -= deltaTime;
+                if (_attackCooldownRemaining < 0) 
+                    _attackCooldownRemaining = 0;
             }
         }
 

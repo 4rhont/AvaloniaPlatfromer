@@ -133,6 +133,14 @@ namespace GameApp.Core.ViewModels
             {
                 UpdateDebugInfo();  // Force initial debug
             }
+
+            //Enemies.CollectionChanged += (sender, e) =>
+            //{
+            //    if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Remove)
+            //    {
+            //        // Можно вызвать событие OnEnemyRemoved, если нужно для View
+            //    }
+            //};
         }
 
         private void LoadLevel(string levelId)
@@ -190,10 +198,16 @@ namespace GameApp.Core.ViewModels
 
             if (action == GameAction.Attack)
             {
-                OnAttackTriggered?.Invoke();               //анимация атаки
-                _activeActions.Remove(GameAction.Attack);  // одноразовое использование
+                if (!_player.IsAttacking && _player.AttackCooldownRemaining <= 0)
+                {
+                    OnAttackTriggered?.Invoke();
+                    _player.IsAttacking = true;
+                    _player.HitEnemies.Clear();
+                }
+                _activeActions.Remove(GameAction.Attack);// Одноразовое
             }
         }
+
         public void StopAction(GameAction action) => _activeActions.Remove(action);
 
         private double _debugTimer;
@@ -336,8 +350,29 @@ namespace GameApp.Core.ViewModels
             CheckGroundCollision();
             CheckEnemyCollisions();
             CheckFallDeath();
+            CheckAttackEnemies();
         }
 
+        private void CheckAttackEnemies()
+        {
+            if (_player.IsAttacking)
+            {
+                for (int i = _enemies.Count - 1; i >= 0; i--)  // Итерация с конца для безопасного удаления
+                {
+                    var enemy = _enemies[i];
+                    if (PhysicsService.CheckAttackHitboxCollision(_player, enemy) && !_player.HitEnemies.Contains(enemy))
+                    {
+                        // Нанесение урона
+                        enemy.Health -= Player.PlayerAttackDamage;
+                        _player.HitEnemies.Add(enemy);  // Чтобы не хитить повторно в этой атаке
+                        if (enemy.Health <= 0)
+                        {
+                            _enemies.RemoveAt(i);  // Удаляем мертвого врага
+                        }
+                    }
+                }
+            }
+        }
         private void CheckEnemyCollisions()
         {
             foreach (var enemy in _enemies)

@@ -83,6 +83,13 @@ namespace GameApp.Core.Models
                 _patrolRange = data.PatrolRange.Value;
             }
         }
+        public void TakeDamage(int amount, double knockbackX = 0, double knockbackY = 0)
+        {
+            if (amount <= 0) return;
+            Health = Math.Max(0, Health - amount);
+            VelocityX += knockbackX;
+            VelocityY += knockbackY;
+        }
 
         public void Update(double deltaTime)
         {

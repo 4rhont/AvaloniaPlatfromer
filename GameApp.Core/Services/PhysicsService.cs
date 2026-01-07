@@ -1,4 +1,6 @@
 ﻿using GameApp.Core.Models;
+using System;
+using System.Numerics;
 
 namespace GameApp.Core.Services
 {
@@ -9,6 +11,13 @@ namespace GameApp.Core.Services
         public const double MaxMoveSpeed = 300;
         public const double JumpVelocity = -800;
         public const double GroundFriction = 3000;
+        public const double AttackDuration = 0.5;    // Длительность атаки (сек)
+        public const double AttackCooldown = 0.2;    // Кулдаун между атаками (сек)
+
+        public const double AttackHitboxWidth = 150.0;   // Ширина хитбокса
+        public const double AttackHitboxHeight = 100.0;  // Высота хитбокса
+        public const double AttackHitboxOffsetX = 20.0;  // Смещение по X от края игрока (для "вылета" вперед)
+        public const double AttackHitboxOffsetY = 50.0;  // Смещение по Y от верха игрока (для центрирования по высоте)
 
         private const double VelocityEpsilon = 20.0;
 
@@ -33,6 +42,20 @@ namespace GameApp.Core.Services
                    enemy.Right >= platform.X &&
                    enemy.Y <= platform.Bottom &&
                    enemy.Bottom >= platform.Y;
+        }
+        public static bool CheckAttackHitboxCollision(Player player, Enemy enemy)
+        {
+            // Вычисляем позицию хитбокса (двигается с игроком)
+            double hitboxX = player.IsFacingRight
+                ? player.Right + AttackHitboxOffsetX
+                : player.X - AttackHitboxWidth - AttackHitboxOffsetX;
+            double hitboxY = player.Y + AttackHitboxOffsetY;
+
+            // Проверяем пересечение с врагом
+            return hitboxX<enemy.Right &&
+                    hitboxX + AttackHitboxWidth> enemy.X &&
+                    hitboxY<enemy.Bottom &&
+                    hitboxY + AttackHitboxHeight> enemy.Y;
         }
 
         public static CollisionType GetCollisionType(Player player, Platform platform)
@@ -129,6 +152,16 @@ namespace GameApp.Core.Services
             }
 
             return CollisionType.None;
+        }
+
+        public static bool CheckAttackCollision(double attackX, double attackY, double attackWidth, double attackHeight, Enemy enemy)
+        {
+            double attackRight = attackX + attackWidth;
+            double attackBottom = attackY + attackHeight;
+            return attackX < enemy.Right &&
+                   attackRight > enemy.X &&
+                   attackY < enemy.Bottom &&
+                   attackBottom > enemy.Y;
         }
 
         public static void ResolveCollision(Enemy enemy, Platform platform, CollisionType type)

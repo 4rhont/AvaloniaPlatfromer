@@ -8,6 +8,7 @@ using Avalonia.Platform;
 using Avalonia.Threading;
 using GameApp.Core.Input;
 using GameApp.Core.Models;
+using GameApp.Core.Services;
 using GameApp.Core.ViewModels;
 using GameApp.ViewModels;
 using ReactiveUI;
@@ -27,6 +28,7 @@ namespace GameApp.Views
 
         private readonly Dictionary<Platform, List<Control>> _platformVisualMap = new();
         private readonly Dictionary<Platform, Control> _debugPlatformMap = new();
+        private Avalonia.Controls.Shapes.Rectangle? _debugAttackRect;
 
         private const double VisibilityBuffer = 200;
 
@@ -74,6 +76,15 @@ namespace GameApp.Views
                             DrawDebugPlayer();
                         });
                     });
+
+                _gameVM.Player.WhenAnyValue(
+                    p => p.IsAttacking,
+                    p => p.X,
+                    p => p.Y,
+                    p => p.IsFacingRight
+                ).Subscribe(_ => Dispatcher.UIThread.Post(UpdateDebugAttackRect));
+
+                InitDebugAttackRect();
             }
 
             PlayerImage.DataContext = _animationVM;
@@ -184,10 +195,43 @@ namespace GameApp.Views
 
             _stopwatch = Stopwatch.StartNew();
 
-            _gameTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(8) };  // FPS
+            _gameTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(4) };  // FPS
             _gameTimer.Tick += OnTick;
             _gameTimer.Start();
 
+        }
+
+        private void InitDebugAttackRect()
+        {
+            _debugAttackRect = new Avalonia.Controls.Shapes.Rectangle
+            {
+                Width = PhysicsService.AttackHitboxWidth,
+                Height = PhysicsService.AttackHitboxHeight,
+                Stroke = new SolidColorBrush(Colors.Yellow),
+                StrokeThickness = 2,
+                Fill = null,
+                IsVisible = false
+            };
+            DebugCanvas.Children.Add(_debugAttackRect);
+        }
+
+        private void UpdateDebugAttackRect()
+        {
+            if (_debugAttackRect == null || !_gameVM.Player.IsAttacking)
+            {
+                if (_debugAttackRect != null) _debugAttackRect.IsVisible = false;
+                return;
+            }
+
+            // Вычисляем позицию хитбокса (аналогично PhysicsService)
+            double hitboxX = _gameVM.Player.IsFacingRight
+                ? _gameVM.Player.Right + PhysicsService.AttackHitboxOffsetX
+                : _gameVM.Player.X - PhysicsService.AttackHitboxWidth - PhysicsService.AttackHitboxOffsetX;
+            double hitboxY = _gameVM.Player.Y + PhysicsService.AttackHitboxOffsetY;
+
+            Canvas.SetLeft(_debugAttackRect, hitboxX);
+            Canvas.SetTop(_debugAttackRect, hitboxY);
+            _debugAttackRect.IsVisible = true;
         }
 
         private void OnTick(object? sender, EventArgs e)
@@ -195,7 +239,7 @@ namespace GameApp.Views
             var deltaTime = _stopwatch.Elapsed.TotalSeconds;
             _stopwatch.Restart();
 
-            if (deltaTime <= 0) deltaTime = 1.0 / 120.0;  // Предотвращаем нулевые delta
+            if (deltaTime <= 0) deltaTime = 1.0 /240.0;  // Предотвращаем нулевые delta
 
             // Обновляем физику
             _gameVM.UpdateGame(deltaTime);
