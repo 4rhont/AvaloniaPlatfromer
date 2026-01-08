@@ -58,7 +58,9 @@ namespace GameApp.Views
         {
             SaveSystemService.DeleteSave();
 
-            var gameViewModel = new GameViewModel(debugMode: false);
+            var debugCheckBox = this.FindControl<CheckBox>("DebugModeCheckBox");
+            bool debugMode = debugCheckBox?.IsChecked ?? false;
+            var gameViewModel = new GameViewModel(debugMode);
             gameViewModel.LoadLevel("level1");
             gameViewModel.Player.CurrentHealth = 5;
 
@@ -76,7 +78,9 @@ namespace GameApp.Views
             if (saveData == null)
                 return;
 
-            var gameViewModel = new GameViewModel(debugMode: false);
+            var debugCheckBox = this.FindControl<CheckBox>("DebugModeCheckBox");
+            bool debugMode = debugCheckBox?.IsChecked ?? false;
+            var gameViewModel = new GameViewModel(debugMode);
             gameViewModel.LoadLevel(saveData.CurrentLevelId);
             gameViewModel.Player.CurrentHealth = saveData.PlayerHealth;
 
