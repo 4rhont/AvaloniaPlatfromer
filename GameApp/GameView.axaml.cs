@@ -68,6 +68,21 @@ namespace GameApp.Views
 
             if (_gameVM.IsDebugMode)
             {
+                _gameVM.Enemies.CollectionChanged += (sender, e) =>
+                {
+                    if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Remove)
+                    {
+                        foreach (Enemy removedEnemy in e.OldItems!)
+                        {
+                            if (_debugEnemyMap.TryGetValue(removedEnemy, out var rect))
+                            {
+                                DebugCanvas.Children.Remove(rect);
+                                _debugEnemyMap.Remove(removedEnemy);
+                            }
+                        }
+                    }
+                };
+
                 _gameVM.WhenAnyValue(vm => vm.PlayerX, vm => vm.PlayerY)
                     .Subscribe(_ =>
                     {
@@ -155,7 +170,7 @@ namespace GameApp.Views
                 MainCanvas.Children.Add(foregroundImage);
             
 
-            // === PARALLAX: двигаем слои с разной скоростью ===
+            // PARALLAX: двигаем слои с разной скоростью
             _gameVM.Camera.WhenAnyValue(c => c.X, c => c.Y)
                 .Subscribe(_ =>
                 {
@@ -363,7 +378,6 @@ namespace GameApp.Views
                 {
                     Width = enemy.Width,
                     Height = enemy.Height,
-                    Fill = new SolidColorBrush(Colors.Purple), 
                     Stroke = new SolidColorBrush(Colors.Violet),
                     StrokeThickness = 2
                 };
