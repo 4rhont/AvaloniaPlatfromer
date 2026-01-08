@@ -14,8 +14,9 @@ namespace GameApp.Core.ViewModels
     public class GameViewModel : ReactiveObject, IDisposable
     {
         private string _currentLevelId = "level1";
-        private const bool DebugMode = true;
-        public bool IsDebugMode => DebugMode;
+
+        public bool IsDebugMode { get; private set; }
+        
         private string _debugInfo = "";
 
         private readonly Camera _camera = new();
@@ -36,7 +37,13 @@ namespace GameApp.Core.ViewModels
         private int _frameCounter = 0;
         private double _fps = 0;
         private double _fpsTimer = 0;
-
+        private bool _showFps = true;
+        public string FpsText => $"{_fps:F1}";
+        public bool ShowFps
+        {
+            get => _showFps;
+            set => this.RaiseAndSetIfChanged(ref _showFps, value);
+        }
 
         // Настройки FPS
         private const double FpsUpdateInterval = 0.5; // секунд
@@ -51,6 +58,7 @@ namespace GameApp.Core.ViewModels
                 _fps = _frameCounter / _fpsTimer;
                 _frameCounter = 0;
                 _fpsTimer = 0;
+                this.RaisePropertyChanged(nameof(FpsText));
             }
         }
 
@@ -62,7 +70,7 @@ namespace GameApp.Core.ViewModels
 
         private void UpdateDebugInfo()
         {
-            if (!DebugMode)
+            if (!IsDebugMode)
                 return;
 
             var lines = new List<string>();
@@ -118,8 +126,10 @@ namespace GameApp.Core.ViewModels
         public double PlayerY => _player.Y;
         public ObservableCollection<Platform> Platforms => _platforms;
 
-        public GameViewModel()
+        public GameViewModel(bool debugMode)
         {
+            IsDebugMode = debugMode;
+
             _player.WhenAnyValue(p => p.X).Subscribe(_ => this.RaisePropertyChanged(nameof(PlayerX)));
             _player.WhenAnyValue(p => p.Y).Subscribe(_ => this.RaisePropertyChanged(nameof(PlayerY)));
 
@@ -127,9 +137,9 @@ namespace GameApp.Core.ViewModels
 
             // Initial setup
             _camera.Follow(_player.X, _player.Y, _player.Width, _player.Height);
-            if (DebugMode)
+            if (IsDebugMode)
             {
-                UpdateDebugInfo();  // Force initial debug
+                UpdateDebugInfo();  // Инициализируем дебаг информацию
             }
 
             //Enemies.CollectionChanged += (sender, e) =>
@@ -240,9 +250,10 @@ namespace GameApp.Core.ViewModels
 
             _camera.Follow(_player.X, _player.Y, _player.Width, _player.Height);
 
-            if (DebugMode)
+            UpdateFps(deltaTime);
+
+            if (IsDebugMode)
             {
-                UpdateFps(deltaTime);
                 UpdateDebugInfoThrottled(deltaTime);
             }
         }

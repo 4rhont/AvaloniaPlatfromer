@@ -56,6 +56,8 @@ namespace GameApp.Views
 
             InitializeComponent();
 
+            this.Focus();
+
             LoadHpTextures();
             UpdateHpBar();
             // Подписка на изменение здоровья игрока
@@ -755,6 +757,12 @@ namespace GameApp.Views
             if (action.HasValue)
             {
                 _gameVM.StartAction(action.Value);
+                e.Handled = true;
+            }
+
+            if (e.Key == Key.F)
+            {
+                _gameVM.ShowFps = !_gameVM.ShowFps;
                 e.Handled = true;
             }
         }

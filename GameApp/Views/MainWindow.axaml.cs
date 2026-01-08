@@ -14,7 +14,8 @@ namespace GameApp.Views
 
         private void StartGame_Click(object sender, RoutedEventArgs e)
         {
-            var gameVM = new GameViewModel();
+            bool debugMode = DebugCheckBox.IsChecked ?? false;
+            var gameVM = new GameViewModel(debugMode);
             var gameView = new GameView(gameVM);
             gameView.Closed += (s, args) =>
             {

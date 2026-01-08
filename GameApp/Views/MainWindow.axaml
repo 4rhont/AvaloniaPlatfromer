@@ -6,7 +6,8 @@
     
     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
         <TextBlock Text="Simple Platformer Test" FontSize="16" HorizontalAlignment="Center"/>
-        <Button Content="Start Game" Click="StartGame_Click" Width="100"/>
+        <Button HorizontalAlignment="Center"  Content="Start Game" Click="StartGame_Click" Width="100"/>
+        <CheckBox x:Name="DebugCheckBox" Content="Debug Mode" IsChecked="True" HorizontalAlignment="Center"/>
         <TextBlock Text="Controls: WASD or Arrow Keys" HorizontalAlignment="Center"/>
     </StackPanel>
 </Window>
