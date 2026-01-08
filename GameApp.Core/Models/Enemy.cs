@@ -21,6 +21,7 @@ namespace GameApp.Core.Models
         private double _startX;
         private double _patrolRange = 800;
         private double _speed = 100;
+        //public double GetSpeed => _speed;
         private int _direction = 1;
         private const double JumpVelocity = -600;
 

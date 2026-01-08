@@ -9,6 +9,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Numerics;
 using System.Reactive.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 namespace GameApp.Core.ViewModels
 {
@@ -192,19 +193,18 @@ namespace GameApp.Core.ViewModels
                 ));
             }
 
-            foreach (var e in level.Enemies)
+            foreach (var eData in level.Enemies)
             {
-                //_enemies.Add(new Enemy(  // Старый код
-                //    e.X,
-                //    e.Y,
-                //    e.Width,
-                //    e.Height,
-                //    e.Damage,
-                //    e.Health
-                //));
-
-                // Новый: используем EnemyData напрямую
-                _enemies.Add(new Enemy(e));  // Теперь с поддержкой Direction и PatrolRange
+                Enemy enemy;
+                if (eData.Type?.ToLowerInvariant() == "flying")
+                {
+                    enemy = new FlyingEnemy(eData, FlyingEnemy.CreateDefaultPattern());
+                }
+                else
+                {
+                    enemy = new Enemy(eData);
+                }
+                Enemies.Add(enemy);
             }
 
             _currentLevelId = level.Id;
@@ -251,7 +251,7 @@ namespace GameApp.Core.ViewModels
         public void StopAction(GameAction action) => _activeActions.Remove(action);
 
         private double _debugTimer;
-
+        private bool _isFlying;
         private void UpdateDebugInfoThrottled(double deltaTime)
         {
             _debugTimer += deltaTime;
@@ -314,6 +314,7 @@ namespace GameApp.Core.ViewModels
 
             foreach (var enemy in _enemies)
             {
+                //_isFlying = enemy is FlyingEnemy;
                 UpdateEnemyPhysics(deltaTime, enemy);
             }
 
@@ -340,96 +341,84 @@ namespace GameApp.Core.ViewModels
 
         private void UpdateEnemyPhysics(double deltaTime, Enemy enemy)
         {
-            currentPlatform = null;
+            _isFlying = enemy is FlyingEnemy;
+            Platform? currentPlatform = null;
+            bool wasOnGround = enemy.IsOnGround;
+            enemy.IsOnGround = false;
 
-            bool wasOnGround = enemy.IsOnGround;  // Запоминаем предыдущее состояние
-                                                  //enemy.IsOnGround = false; // Сброс перед проверками
-
-            if (!enemy.IsOnGround)
+            if (_isFlying)
             {
-                enemy.VelocityY += PhysicsService.Gravity * deltaTime;
-            }
-
-            enemy.Update(deltaTime); // Обновляет VelocityX 
-            enemy.X += enemy.VelocityX * deltaTime;
-
-            // Применяем VelocityY к Y
-            enemy.Y += enemy.VelocityY * deltaTime;
-
-            // Проверяем вертикальные коллизии с платформами
-            foreach (var p in _platforms)
-            {
-                if (PhysicsService.CheckCollision(enemy, p))
-                {
-                    var colType = PhysicsService.GetCollisionType(enemy, p);
-                    if (colType == CollisionType.Top || colType == CollisionType.Bottom)
-                        PhysicsService.ResolveCollision(enemy, p, colType);
-                }
-            }
-
-            // Простая проверка на землю
-            double feetX = enemy.X + enemy.Width / 2;
-            double feetY = enemy.Y + enemy.Height;
-            foreach (var p in _platforms)
-            {
-                bool withinX = feetX >= p.X && feetX <= p.X + p.Width;
-                if (withinX && feetY >= p.Y - 3 && feetY <= p.Y + 3 && enemy.VelocityY >= 0)
-                {
-                    enemy.IsOnGround = true;
-                    currentPlatform = p;
-                    break;
-                }
-            }
-            enemy.IsOnGround = currentPlatform != null;
-
-            // проверка на горизонтальные коллизии
-            foreach (var p in _platforms)
-            {
-                if (PhysicsService.CheckCollision(enemy, p))
-                {
-                    var colType = PhysicsService.GetCollisionType(enemy, p);
-                    if (colType == CollisionType.Side)
-                        PhysicsService.ResolveCollision(enemy, p, colType);
-                }
-            }
-
-            double deltaX = Math.Abs(enemy.X - enemy.PrevX);
-            if (deltaX < Enemy.StuckEpsilon && enemy.IsOnGround)
-            {
-                enemy.StuckCounter++;
-                if (enemy.StuckCounter >= Enemy.StuckThreshold)
-                {
-                    enemy.Direction = -enemy.Direction;
-                    enemy.StuckCounter = 0;
-                    // Опционально: лёгкий "толчок" для выхода из застревания
-                    enemy.VelocityX = enemy.Direction * enemy.GetSpeedX * 0.5;  // 50% скорости, чтобы не застрял сразу
-                }
+                ((FlyingEnemy)enemy).UpdateFlying(deltaTime, Player, Platforms);
             }
             else
             {
-                enemy.StuckCounter = 0;
+                if (!enemy.IsOnGround)
+                    enemy.VelocityY += PhysicsService.Gravity * deltaTime;
+                enemy.Update(deltaTime);
             }
-            enemy.PrevX = enemy.X;
 
-            // Проверка при приземлении
-            if (enemy.IsOnGround && !wasOnGround && enemy.IsJumping)
+            enemy.X += enemy.VelocityX * deltaTime;
+            enemy.Y += enemy.VelocityY * deltaTime;
+
+            // Platform collisions for all enemies
+            foreach (var p in Platforms)
             {
-                // Только что приземлился после прыжка
-                if (Math.Abs(enemy.Y - enemy.JumpStartY) < Enemy.JumpHeightThreshold)
+                if (PhysicsService.CheckCollision(enemy, p))
                 {
-                    // Не смог залезть — упал на то же место (тот же уровень Y)
-                    enemy.Direction = -enemy.JumpStartDirection;
-                    enemy.VelocityX = enemy.Direction * 200;
-                    // System.Diagnostics.Debug.WriteLine($"Enemy failed jump, reversing at X={enemy.X:F1}, Y={enemy.Y:F1}");
+                    var colType = PhysicsService.GetCollisionType(enemy, p);
+                    PhysicsService.ResolveCollision(enemy, p, colType);
+                    double deltaX = Math.Abs(enemy.X - enemy.PrevX);
+                    if (deltaX < Enemy.StuckEpsilon)
+                    {
+                        enemy.StuckCounter++;
+                        if (!_isFlying && enemy.StuckCounter >= Enemy.StuckThreshold)
+                        {
+                            enemy.Direction = -enemy.Direction;
+                            enemy.StuckCounter = 0;
+                            enemy.VelocityX = enemy.Direction * enemy.VelocityX * 0.5f;
+                        }
+                    }
+                    else
+                    {
+                        enemy.StuckCounter = 0;
+                    }
+                    enemy.PrevX = enemy.X;
                 }
-                else
-                {
+            }
 
-                    // Успех: залез выше или спустился — продолжаем в текущем направлении
-                    // System.Diagnostics.Debug.WriteLine($"Enemy successful jump, new Y={enemy.Y:F1} vs start {enemy.JumpStartY:F1}");
+            // Ground check/jump only for ground enemies
+            if (!_isFlying)
+            {
+                double feetX = enemy.X + enemy.Width / 2;
+                double feetY = enemy.Bottom;
+                foreach (var p in Platforms)
+                {
+                    bool withinX = feetX >= p.X && feetX <= p.X + p.Width;
+                    if (withinX && feetY >= p.Y - 3 && feetY <= p.Y + 3)
+                    {
+                        enemy.VelocityY = 0;
+                        enemy.IsOnGround = true;
+                        currentPlatform = p;
+                        break;
+                    }
                 }
-                /*enemy.IsJumping = false;*/  // Сброс в любом случае
-                enemy.IsJumping = false;
+
+                if (enemy.IsOnGround && !wasOnGround)
+                {
+                    if (Math.Abs(enemy.Y - enemy.JumpStartY) < Enemy.JumpHeightThreshold)
+                    {
+                        // Failed jump, reverse
+                        enemy.Direction = -enemy.JumpStartDirection;
+                        enemy.VelocityX = enemy.Direction * 200;
+                        System.Diagnostics.Debug.WriteLine($"Enemy failed jump, reversing at X={enemy.X:F1}, Y={enemy.Y:F1}");
+                    }
+                    else
+                    {
+                        // Successful jump
+                        System.Diagnostics.Debug.WriteLine($"Enemy successful jump, new Y={enemy.Y:F1} vs start {enemy.JumpStartY:F1}");
+                    }
+                    enemy.IsJumping = false;
+                }
             }
         }
 

@@ -131,7 +131,8 @@
       "damage": 1,
       "health": 5,
       "direction": -1,
-      "patrolRange": 800
+      "patrolRange": 800,
+      "type":  "flying"
     }
   ]
 }

@@ -10,6 +10,7 @@
         public int Health { get; set; } = 3;
 
         public int? Direction { get; set; }  
-        public double? PatrolRange { get; set; } 
+        public double? PatrolRange { get; set; }
+        public string? Type { get; set; } = "default";
     }
 }
