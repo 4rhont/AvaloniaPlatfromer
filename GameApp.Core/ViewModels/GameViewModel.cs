@@ -1,4 +1,5 @@
 ﻿using GameApp.Core.Input;
+using GameApp.Core.Levels;
 using GameApp.Core.Models;
 using GameApp.Core.Services;
 using ReactiveUI;
@@ -6,14 +7,17 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Numerics;
 using System.Reactive.Linq;
-using GameApp.Core.Levels;
 
 namespace GameApp.Core.ViewModels
 {
     public class GameViewModel : ReactiveObject, IDisposable
     {
         private string _currentLevelId = "level1";
+        private string? _nextLevelId;
+        private Platform? _endZone;
+        public event Action? OnLevelCompleted;
 
         public bool IsDebugMode { get; private set; }
         
@@ -33,6 +37,14 @@ namespace GameApp.Core.ViewModels
 
         private readonly ObservableCollection<Enemy> _enemies = new();
         public ObservableCollection<Enemy> Enemies => _enemies;
+
+        //Endzone
+        public double EndZoneX => _endZone?.X ?? 0;
+        public double EndZoneY => _endZone?.Y ?? 0;
+        public double EndZoneWidth => _endZone?.Width ?? 0;
+        public double EndZoneHeight => _endZone?.Height ?? 0;
+        public bool HasEndZone => _endZone != null;
+
         // FPS
         private int _frameCounter = 0;
         private double _fps = 0;
@@ -195,9 +207,26 @@ namespace GameApp.Core.ViewModels
             }
 
             _currentLevelId = level.Id;
+            _nextLevelId = level.NextLevelId;
 
             _camera.LevelWidth = level.Width;
             _camera.LevelHeight = level.Height;
+
+            if (level.EndX.HasValue && level.EndY.HasValue)
+            {
+                _endZone = new Platform(
+                    level.EndX.Value,
+                    level.EndY.Value,
+                    level.EndWidth ?? 100,
+                    level.EndHeight ?? 200,
+                    false,  // Не damaging
+                    0
+                );
+            }
+            else
+            {
+                _endZone = null;  // Нет конца (бесконечный уровень?)
+            }
         }
 
         public void StartAction(GameAction action)
@@ -290,6 +319,20 @@ namespace GameApp.Core.ViewModels
             CheckEnemyCollisions();
             CheckFallDeath();
             CheckAttackEnemies();
+
+            CheckEndZone();
+        }
+
+        private void CheckEndZone()
+        {
+            if (_endZone != null && PhysicsService.CheckCollision(_player, _endZone))
+            {
+                if (!string.IsNullOrEmpty(_nextLevelId))
+                {
+                    LoadLevel(_nextLevelId);
+                }
+                // Optional: Reset endZone or handle no-next-level case
+            }
         }
 
         private void UpdateEnemyPhysics(double deltaTime, Enemy enemy)

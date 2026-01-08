@@ -35,6 +35,8 @@ namespace GameApp.Views
         private Avalonia.Controls.Shapes.Rectangle? _debugAttackRect;
 
         public ObservableCollection<EnemyAnimationViewModel> EnemyViewModels { get; } = new();
+
+        private readonly Dictionary<string, Avalonia.Controls.Shapes.Rectangle> debugEndZoneMap = new();
         private const double VisibilityBuffer = 200;
 
         private Bitmap? _platformTexture;
@@ -321,6 +323,7 @@ namespace GameApp.Views
                 DrawDebugPlatforms();
                 DrawDebugEnemies();
                 DrawDebugPlayer();
+                DrawDebugEndZone();
             }
 
             UpdatePlatformVisibility();
@@ -483,6 +486,24 @@ namespace GameApp.Views
             }
         }
 
+        private void DrawDebugEndZone()
+        {
+            if (!debugEndZoneMap.ContainsKey("end") && _gameVM.HasEndZone)
+            {
+                var rect = new Avalonia.Controls.Shapes.Rectangle
+                {
+                    Width = _gameVM.EndZoneWidth,
+                    Height = _gameVM.EndZoneHeight,
+                    Stroke = new SolidColorBrush(Colors.Blue),
+                    StrokeThickness = 3,
+                    Fill = null
+                };
+                Canvas.SetLeft(rect, _gameVM.EndZoneX);
+                Canvas.SetTop(rect, _gameVM.EndZoneY);
+                DebugCanvas.Children.Add(rect);
+                debugEndZoneMap["end"] = rect;
+            }
+        }
         private void DrawDebugPlayer()
         {
             if (_debugPlayerRect == null)

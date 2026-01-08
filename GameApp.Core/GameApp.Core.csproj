@@ -12,9 +12,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Levels\LevelsData\level1.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+  <None Update="Levels\LevelsData\*.json">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
   </ItemGroup>
 
 </Project>
