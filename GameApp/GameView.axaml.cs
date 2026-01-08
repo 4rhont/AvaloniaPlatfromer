@@ -10,6 +10,7 @@ using Avalonia.Threading;
 using GameApp.Converters;
 using GameApp.Core.Input;
 using GameApp.Core.Models;
+using GameApp.Core.Services;
 using GameApp.Core.ViewModels;
 using GameApp.ViewModels;
 using ReactiveUI;
@@ -31,7 +32,7 @@ namespace GameApp.Views
         private readonly Dictionary<Platform, List<Control>> _platformVisualMap = new();
         private readonly Dictionary<Platform, Control> _debugPlatformMap = new();
         private readonly Dictionary<Enemy, EnemyAnimationViewModel> _enemyAnimationMap = new();
-
+        private Avalonia.Controls.Shapes.Rectangle? _debugAttackRect;
 
         public ObservableCollection<EnemyAnimationViewModel> EnemyViewModels { get; } = new();
         private const double VisibilityBuffer = 200;
@@ -40,7 +41,7 @@ namespace GameApp.Views
         private Bitmap? _damagingPlatformTexture;
         private Bitmap? _hp5Texture, _hp4Texture, _hp3Texture, _hp2Texture, _hp1Texture;
 
-        // Пока что неп юзается, на будущее:
+        
         private readonly Dictionary<Enemy, Image> _enemyVisualMap = new();
         private readonly Dictionary<Enemy, Control> _debugEnemyMap = new();
         private Bitmap? _enemyTexture;
@@ -90,6 +91,32 @@ namespace GameApp.Views
                     });
                 });
 
+            _gameVM.Enemies.CollectionChanged += (sender, e) =>
+            {
+                if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Remove)
+                {
+                    if (_gameVM.IsDebugMode)
+                        foreach (Enemy removedEnemy in e.OldItems!)
+                        {
+                            if (_gameVM.IsDebugMode)
+                                if (_debugEnemyMap.TryGetValue(removedEnemy, out var rect))
+                                {
+                                    DebugCanvas.Children.Remove(rect);
+                                    _debugEnemyMap.Remove(removedEnemy);
+                                }
+                        }
+
+                    foreach (Enemy removedEnemy in e.OldItems!)
+                    {
+                        if (_enemyVisualMap.TryGetValue(removedEnemy, out var image))
+                        {
+                            MainCanvas.Children.Remove(image);
+                            _enemyVisualMap.Remove(removedEnemy);
+                        }
+                    }
+                }
+            };
+
             if (_gameVM.IsDebugMode)
             {
                 _gameVM.WhenAnyValue(vm => vm.PlayerX, vm => vm.PlayerY)
@@ -100,6 +127,16 @@ namespace GameApp.Views
                             DrawDebugPlayer();
                         });
                     });
+
+                _gameVM.Player.WhenAnyValue(
+                    p => p.IsAttacking,
+                    p => p.X,
+                    p => p.Y,
+                    p => p.IsFacingRight,
+                    p => p.AttackProgress
+                ).Subscribe(_ => Dispatcher.UIThread.Post(UpdateDebugAttackRect));
+
+                InitDebugAttackRect();
             }
 
 
@@ -294,18 +331,58 @@ namespace GameApp.Views
 
             _stopwatch = Stopwatch.StartNew();
 
-            _gameTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(8) };  // FPS
+            _gameTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(4) };  // FPS
             _gameTimer.Tick += OnTick;
             _gameTimer.Start();
 
         }
+
+        private void InitDebugAttackRect()
+        {
+            _debugAttackRect = new Avalonia.Controls.Shapes.Rectangle
+            {
+                Width = 0,
+                Height = Player.AttackHitboxHeight,
+                Stroke = new SolidColorBrush(Colors.Yellow),
+                StrokeThickness = 2,
+                Fill = null,
+                IsVisible = false
+            };
+            DebugCanvas.Children.Add(_debugAttackRect);
+        }
+
+        private void UpdateDebugAttackRect()
+        {
+            if (_debugAttackRect == null || !_gameVM.Player.IsAttacking)
+            {
+                if (_debugAttackRect != null) _debugAttackRect.IsVisible = false;
+                return;
+            }
+
+            // Вычисляем позицию хитбокса (аналогично PhysicsService)
+            double progress = _gameVM.Player.AttackProgress;
+            double currentWidth = Player.AttackHitboxWidth * progress;
+
+
+            double hitboxX = _gameVM.Player.IsFacingRight
+                ? _gameVM.Player.Right + Player.AttackHitboxOffsetX
+                : _gameVM.Player.X - currentWidth - Player.AttackHitboxOffsetX;
+            double hitboxY = _gameVM.Player.Y + Player.AttackHitboxOffsetY;
+
+            _debugAttackRect.Width = currentWidth;
+
+            Canvas.SetLeft(_debugAttackRect, hitboxX);
+            Canvas.SetTop(_debugAttackRect, hitboxY);
+            _debugAttackRect.IsVisible = true;
+        }
+
 
         private void OnTick(object? sender, EventArgs e)
         {
             var deltaTime = _stopwatch.Elapsed.TotalSeconds;
             _stopwatch.Restart();
 
-            if (deltaTime <= 0) deltaTime = 1.0 / 120.0;  // Предотвращаем нулевые delta
+            if (deltaTime <= 0) deltaTime = 1.0 / 240.0;  // Предотвращаем нулевые delta
 
             // Обновляем физику
             _gameVM.UpdateGame(deltaTime);
