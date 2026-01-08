@@ -1,13 +1,65 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="GameApp.Views.MainWindow"
-        Title="Game Launcher"
-        Width="300" Height="200">
+        Title="My Game"
+        Width="400"
+        Height="500"
+        Background="#FDF8F9"
+        WindowStartupLocation="CenterScreen">
     
-    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
-        <TextBlock Text="Simple Platformer Test" FontSize="16" HorizontalAlignment="Center"/>
-        <Button HorizontalAlignment="Center"  Content="Start Game" Click="StartGame_Click" Width="100"/>
-        <CheckBox x:Name="DebugCheckBox" Content="Debug Mode" IsChecked="True" HorizontalAlignment="Center"/>
-        <TextBlock Text="Controls: WASD or Arrow Keys" HorizontalAlignment="Center"/>
+    <StackPanel VerticalAlignment="Center" 
+                HorizontalAlignment="Center" 
+                Spacing="20"
+                Margin="20">
+        
+        <TextBlock Text="MY GAME" 
+                   FontSize="32" 
+                   FontWeight="Bold"
+                   Foreground="#134252"
+                   TextAlignment="Center" />
+        
+        <Button Content="NEW GAME"
+                Click="NewGame_Click"
+                Background="#208081"
+                Foreground="White"
+                Padding="20,12"
+                FontSize="16"
+                FontWeight="Bold"
+                CornerRadius="8" />
+        
+        <Button Name="LoadGameButton"
+                Content="LOAD GAME"
+                Click="LoadGame_Click"
+                Background="#6B7280"
+                Foreground="White"
+                Padding="20,12"
+                FontSize="16"
+                FontWeight="Bold"
+                CornerRadius="8"
+                IsEnabled="False" />
+        
+        <Border Name="SaveInfoBorder"
+                Background="#F3F4F6"
+                BorderBrush="#D1D5DB"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16"
+                IsVisible="False">
+            
+            <StackPanel Spacing="8">
+                <TextBlock Text="LAST SAVE" 
+                           FontSize="12" 
+                           FontWeight="Bold"
+                           Foreground="#6B7280" />
+                
+                <TextBlock Name="SaveTimeText"
+                           FontSize="14"
+                           Foreground="#134252" />
+                
+                <TextBlock Name="SaveLevelText"
+                           FontSize="14"
+                           Foreground="#134252" />
+            </StackPanel>
+        </Border>
     </StackPanel>
 </Window>

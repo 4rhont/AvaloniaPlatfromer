@@ -10,6 +10,7 @@ using System.Linq;
 using System.Numerics;
 using System.Reactive.Linq;
 using System.Security.Cryptography.X509Certificates;
+using GameApp.Core.Services;
 
 namespace GameApp.Core.ViewModels
 {
@@ -165,7 +166,7 @@ namespace GameApp.Core.ViewModels
             //};
         }
 
-        private void LoadLevel(string levelId)
+        public void LoadLevel(string levelId)
         {
             _enemies.Clear();
             _platforms.Clear();
@@ -331,11 +332,13 @@ namespace GameApp.Core.ViewModels
         {
             if (_endZone != null && PhysicsService.CheckCollision(_player, _endZone))
             {
+
                 if (!string.IsNullOrEmpty(_nextLevelId))
                 {
+                    SaveGameState(_nextLevelId);
                     LoadLevel(_nextLevelId);
                 }
-               
+                
             }
         }
 
@@ -621,6 +624,33 @@ namespace GameApp.Core.ViewModels
         public void Dispose()
         {
             // Здесь можно добавить очистку
+        }
+        public void SaveGameState(string nextLevelID)
+        {
+            var saveData = new SaveGameData
+            {
+                CurrentLevelId = nextLevelID,
+                PlayerHealth = _player.CurrentHealth,
+                SaveTime = DateTime.Now,
+                Version = 1
+            };
+
+            SaveSystemService.SaveGame(saveData);
+        }
+        public void LoadGameState()
+        {
+            var data = SaveSystemService.LoadGame();
+            if (data != null)
+            {
+                _currentLevelId = data.CurrentLevelId;
+                _player.CurrentHealth = data.PlayerHealth;
+            }
+        }
+        public void StartNewGame()
+        {
+            SaveSystemService.DeleteSave();
+            _currentLevelId = "level1";
+            _player.CurrentHealth = 5;
         }
     }
 }
