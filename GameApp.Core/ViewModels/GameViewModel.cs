@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Linq;
-
 using GameApp.Core.Levels;
 
 namespace GameApp.Core.ViewModels
@@ -33,7 +32,6 @@ namespace GameApp.Core.ViewModels
 
         private readonly ObservableCollection<Enemy> _enemies = new();
         public ObservableCollection<Enemy> Enemies => _enemies;
-
         // FPS
         private int _frameCounter = 0;
         private double _fps = 0;
@@ -166,8 +164,8 @@ namespace GameApp.Core.ViewModels
                     p.Y,
                     p.Width,
                     p.Height,
-                    p.IsDamaging ?? false,  // Из json или false
-                    p.Damage ?? 0           // Из json или 0
+                    p.IsDamaging ?? false,
+                    p.Damage ?? 0
                 ));
             }
 
@@ -259,6 +257,11 @@ namespace GameApp.Core.ViewModels
 
         private void UpdatePhysics(double deltaTime)
         {
+            foreach (var enemy in _enemies)
+            {
+                enemy.SavePreviousPosition(); 
+            }
+
             ApplyGravity(deltaTime);
             HandleMovement(deltaTime);
             ApplyFriction(deltaTime);

@@ -24,16 +24,25 @@ namespace GameApp.Core.Models
         private int _direction = 1;
         private const double JumpVelocity = -600;
 
+        public bool IsFacingRight => _direction == 1;
         
         public double GetSpeedX => _speed;
 
         private double _prevX;
+        private double _prevY;
         public double PrevX { get => _prevX; set => this.RaiseAndSetIfChanged(ref _prevX, value); }
+        public double PrevY => _prevY;
         public int GetStuckCounter => _stuckCounter;
         public int StuckCounter { get => _stuckCounter; set => this.RaiseAndSetIfChanged(ref _stuckCounter, value); }
         private int _stuckCounter = 0;
         public const int StuckThreshold = 3;  // Кол-во кадров без движения для разворота
         public const double StuckEpsilon = 1.0;  // Минимальное изменение X для "движения" (пиксели за кадр)
+
+        public void SavePreviousPosition()
+        {
+            _prevX = X;
+            _prevY = Y;
+        }
 
         public const double EnemyKnockbackDuration = 0.5;  // Длительность отскока (сек)
         public const double EnemyKnockbackFriction = 3000;  // Трение во время отскока 

@@ -5,22 +5,23 @@
         xmlns:views="clr-namespace:GameApp.Views"
         xmlns:vmAnim="clr-namespace:GameApp.ViewModels;assembly=GameApp"
         x:Class="GameApp.Views.GameView"
+		x:Name="gameView"
         x:DataType="vm:GameViewModel"
         Title="Platformer - Textures"
         Width="1920"
         Height="1080"
         Focusable="True">
 
-    <Window.Resources>
-        <converters:BoolToScaleXConverter x:Key="BoolToScaleConverter"/>
-    </Window.Resources>
+	<Window.Resources>
+		<converters:BoolToScaleXConverter x:Key="BoolToScaleConverter"/>
+	</Window.Resources>
 
-    <Grid>
+	<Grid>
+		<!-- Мир двигается камерой -->
+		<Canvas x:Name="MainCanvas" Background="DarkBlue">
 
-        <!--  Мир двигается камерой -->
-        <Canvas x:Name="MainCanvas" Background="DarkBlue">
-
-            <Image x:Name="PlayerImage"
+			<!-- Игрок -->
+			<Image x:Name="PlayerImage"
                    x:DataType="vmAnim:PlayerAnimationViewModel"
                    Width="{Binding VisualWidth}"
                    Height="{Binding VisualHeight}"
@@ -28,51 +29,93 @@
                    Canvas.Top="{Binding VisualY}"
                    Source="{Binding CurrentFrameBitmap}"
                    RenderTransformOrigin="50%,50%">
-
-                <Image.RenderTransform>
-                    <ScaleTransform
-                        ScaleX="{Binding IsFacingRight,
-                            Converter={StaticResource BoolToScaleConverter}}"
+				<Image.RenderTransform>
+					<ScaleTransform
+                        ScaleX="{Binding IsFacingRight, Converter={StaticResource BoolToScaleConverter}}"
                         ScaleY="1"/>
-                </Image.RenderTransform>
-            </Image>
+				</Image.RenderTransform>
+			</Image>
 
-            <!-- Погода -->
-            <views:WeatherLayer x:Name="WeatherLayer" Width="10000" Height="3000"/>
+			<ItemsControl ItemsSource="{Binding #gameView.EnemyViewModels}">
+				<ItemsControl.ItemsPanel>
+					<ItemsPanelTemplate>
+						<Canvas Canvas.ZIndex="100" />
+					</ItemsPanelTemplate>
+				</ItemsControl.ItemsPanel>
 
-			
-            <!-- Debug hitboxes двигаются камерой -->
-            <Canvas x:Name="DebugCanvas"
+				<ItemsControl.ItemTemplate>
+					<DataTemplate x:DataType="vmAnim:EnemyAnimationViewModel">
+						<Image Width="{Binding VisualWidth}"
+							   Height="{Binding VisualHeight}"
+							   Source="{Binding CurrentFrameBitmap}"
+							   Stretch="UniformToFill">
+							<Image.RenderTransform>
+								<TransformGroup>
+									<TranslateTransform X="{Binding VisualX}" Y="{Binding VisualY}"/>
+									<ScaleTransform ScaleX="{Binding EnemyScaleX}" ScaleY="1"/>
+								</TransformGroup>
+							</Image.RenderTransform>
+						</Image>
+					</DataTemplate>
+				</ItemsControl.ItemTemplate>
+			</ItemsControl>
+			<!-- Погода -->
+			<views:WeatherLayer x:Name="WeatherLayer" Width="10000" Height="3000"/>
+
+			<!-- Debug hitboxes двигаются камерой -->
+			<Canvas x:Name="DebugCanvas"
                     Canvas.ZIndex="1000"
                     IsHitTestVisible="False"/>
-        </Canvas>
+		</Canvas>
 
-        <!-- Debug overlay не двигается камерой -->
-        <Border
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
-            Margin="10"
-            Background="#AA000000"
-            Padding="8"
-            CornerRadius="6"
-            IsHitTestVisible="False">
+		<!-- Debug overlay не двигается камерой -->
+		<Border HorizontalAlignment="Left"
+				VerticalAlignment="Top"
+				Margin="10"
+				Background="#AA000000"
+				Padding="8"
+				CornerRadius="6"
+				IsHitTestVisible="False">
+			<TextBlock Width="500"
+					   Text="{Binding DebugInfo}"
+					   Foreground="White"
+					   FontSize="14"
+					   TextWrapping="Wrap"/>
+		</Border>
 
-            <TextBlock
-                Width="500"
-                Text="{Binding DebugInfo}"
-                Foreground="White"
-                FontSize="14"
-                TextWrapping="Wrap"/>
-        </Border>
+		<!-- HP Bar с текстом -->
+		<Border x:Name="HpBarContainer"
+				HorizontalAlignment="Left"
+				VerticalAlignment="Top"
+				Margin="20,20,0,0"
+				IsHitTestVisible="False">
 
-        <!-- Подсказка по управлению -->
-        <TextBlock
-            HorizontalAlignment="Left"
-            VerticalAlignment="Bottom"
-            Margin="10"
-            Text="Controls: WASD/arrows, Space=Jump, LMB=Attack"
-            Foreground="White"
-            FontSize="14"/>
+			<StackPanel Orientation="Horizontal"
+						VerticalAlignment="Center">
 
-    </Grid>
+				<!-- текст слева -->
+				<TextBlock x:Name="HpText"
+						   Text="HP"
+						   Foreground="White"
+						   FontSize="24"
+						   FontWeight="Bold"
+						   VerticalAlignment="Center"
+						   Margin="0,0,0,0"/>
+
+				<!-- картинка HP -->
+				<Image x:Name="HpBarImage"
+					   Width="300"
+					   Height="100"
+					   Stretch="Uniform"/>
+			</StackPanel>
+		</Border>
+
+		<!-- Подсказка по управлению -->
+		<TextBlock HorizontalAlignment="Left"
+                   VerticalAlignment="Bottom"
+                   Margin="10"
+                   Text="Controls: WASD/arrows, Space=Jump, LMB=Attack"
+                   Foreground="White"
+                   FontSize="14"/>
+	</Grid>
 </Window>
