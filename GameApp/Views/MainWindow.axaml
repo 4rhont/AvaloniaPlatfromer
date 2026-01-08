@@ -1,7 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="GameApp.Views.MainWindow"
-        Title="My Game"
+        Title="ROOTS"
         Width="400"
         Height="500"
         Background="Black"
@@ -28,73 +28,86 @@
         </Style>
     </Window.Styles>
 
-    <StackPanel VerticalAlignment="Center" 
-                HorizontalAlignment="Center" 
-                Spacing="20"
-                Margin="20">
-        
-        <TextBlock Text="ROOTS" 
-                   FontSize="40" 
-                   FontWeight="Bold"
-                   Foreground="White"
-                   TextAlignment="Center" 
-                   FontFamily="{StaticResource UndertaleFont}"
-                   LetterSpacing="8"
-                   Margin="10,0,0,0"/>
-        
-        <Button Content="NEW GAME"
-                HorizontalAlignment="Center" 
-                Click="NewGame_Click"
-                Classes="MenuButton" />
-        
-        <Button Name="LoadGameButton"
-                HorizontalAlignment="Center" 
-                Content="LOAD GAME"
-                Click="LoadGame_Click"
-                Classes="MenuButton"
-                IsEnabled="False" />
-        
-        <Border Name="SaveInfoBorder"
+    <Grid>
+        <!-- ÑÍÅÃ ÍÀ ÔÎÍÅ -->
+        <Canvas Name="SnowCanvas" 
                 Background="Black"
-                BorderBrush="White"
-                BorderThickness="1"
-                CornerRadius="8"
-                Padding="16"
-                IsVisible="False">
-            
-            <StackPanel Spacing="8">
-                <TextBlock Text="LAST SAVE" 
-                           FontSize="12" 
-                           FontWeight="Bold"
-                           Foreground="White" />
-                
-                <TextBlock Name="SaveTimeText"
-                           FontSize="14"
-                           Foreground="White" />
-                
-                <TextBlock Name="SaveLevelText"
-                           FontSize="14"
-                           Foreground="White" />
-            </StackPanel>
-        </Border>
+                IsHitTestVisible="False"
+                ZIndex="0" />
 
-        <Border Background="Black"
-                BorderBrush="White"
-                BorderThickness="1"
-                CornerRadius="6"
-                Padding="12">
+        <!-- ÎÑÍÎÂÍÎÉ ÊÎÍÒÅÍÒ -->
+        <StackPanel VerticalAlignment="Center" 
+                    HorizontalAlignment="Center" 
+                    Spacing="20"
+                    Margin="20"
+                    ZIndex="1">
             
-            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                <CheckBox Name="DebugModeCheckBox" 
-                          VerticalAlignment="Center"
-                          BorderBrush="White"
-                          BorderThickness="1" />
-                <TextBlock Text="Debug Mode"
-                           Foreground="White"
-                           VerticalAlignment="Center"
-                           FontSize="13" />
-            </StackPanel>
-        </Border>
-    </StackPanel>
+            <TextBlock Text="ROOTS" 
+                       FontSize="32" 
+                       FontWeight="Bold"
+                       Foreground="White"
+                       TextAlignment="Center"
+                       HorizontalAlignment="Center"
+                       FontFamily="{StaticResource UndertaleFont}"
+                       LetterSpacing="8"
+                       Margin="0,0,0,0" />
+            
+            <Button Content="NEW GAME"
+                    HorizontalAlignment="Center" 
+                    Click="NewGame_Click"
+                    Classes="MenuButton"
+                    FontFamily="{StaticResource UndertaleFont}" />
+            
+            <Button Name="LoadGameButton"
+                    HorizontalAlignment="Center" 
+                    Content="LOAD GAME"
+                    Click="LoadGame_Click"
+                    Classes="MenuButton"
+                    FontFamily="{StaticResource UndertaleFont}"
+                    IsEnabled="False" />
+            
+            <Border Name="SaveInfoBorder"
+                    Background="Black"
+                    BorderBrush="White"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16"
+                    IsVisible="False">
+                
+                <StackPanel Spacing="8">
+                    <TextBlock Text="LAST SAVE" 
+                               FontSize="12" 
+                               FontWeight="Bold"
+                               Foreground="White" />
+                    
+                    <TextBlock Name="SaveTimeText"
+                               FontSize="14"
+                               Foreground="White" />
+                    
+                    <TextBlock Name="SaveLevelText"
+                               FontSize="14"
+                               Foreground="White" />
+                </StackPanel>
+            </Border>
+
+            <Border Background="Black"
+                    BorderBrush="White"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="12">
+                
+                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <CheckBox Name="DebugModeCheckBox" 
+                              VerticalAlignment="Center"
+                              BorderBrush="White"
+                              BorderThickness="1" />
+                    <TextBlock Text="Debug Mode"
+                               Foreground="White"
+                               VerticalAlignment="Center"
+                               FontSize="13" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Grid>
 
 </Window>

@@ -3,21 +3,41 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using GameApp.Core.Services;
 using GameApp.Core.ViewModels;
+using GameApp.ViewModels;
 using GameApp.Views;
+using System;
 
 namespace GameApp.Views
 {
     public partial class MainWindow : Window
     {
+        private MainWindowViewModel? _viewModel;
+
         public MainWindow()
         {
             InitializeComponent();
+            _viewModel = new MainWindowViewModel();
+            this.DataContext = _viewModel;
         }
 
         protected override void OnLoaded(RoutedEventArgs e)
         {
             base.OnLoaded(e);
+
+            // Инициализируем снег
+            var snowCanvas = this.FindControl<Canvas>("SnowCanvas");
+            if (snowCanvas != null && _viewModel != null)
+            {
+                _viewModel.SetSnowCanvas(snowCanvas);
+            }
+
             UpdateLoadButtonState();
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+            _viewModel?.StopSnowAnimation();
         }
 
         private void UpdateLoadButtonState()
@@ -56,20 +76,7 @@ namespace GameApp.Views
 
         private void NewGame_Click(object? sender, RoutedEventArgs e)
         {
-            SaveSystemService.DeleteSave();
-
-            var debugCheckBox = this.FindControl<CheckBox>("DebugModeCheckBox");
-            bool debugMode = debugCheckBox?.IsChecked ?? false;
-            var gameViewModel = new GameViewModel(debugMode);
-            gameViewModel.LoadLevel("level1");
-            gameViewModel.Player.CurrentHealth = 5;
-
-            // КЛЮЧ: Открываем GameView как новое ОКНО
-            var gameView = new GameView(gameViewModel);
-            gameView.Show();
-
-            // Закрываем меню
-            this.Close();
+            StartGame("level1", isNewGame: true);
         }
 
         private void LoadGame_Click(object? sender, RoutedEventArgs e)
@@ -78,17 +85,25 @@ namespace GameApp.Views
             if (saveData == null)
                 return;
 
+            StartGame(saveData.CurrentLevelId, isNewGame: false, playerHealth: saveData.PlayerHealth);
+        }
+
+        private void StartGame(string levelId, bool isNewGame, int playerHealth = 5)
+        {
             var debugCheckBox = this.FindControl<CheckBox>("DebugModeCheckBox");
             bool debugMode = debugCheckBox?.IsChecked ?? false;
-            var gameViewModel = new GameViewModel(debugMode);
-            gameViewModel.LoadLevel(saveData.CurrentLevelId);
-            gameViewModel.Player.CurrentHealth = saveData.PlayerHealth;
 
-            // КЛЮЧ: Открываем GameView как новое ОКНО
+            if (isNewGame)
+                SaveSystemService.DeleteSave();
+
+            var gameViewModel = new GameViewModel(debugMode: debugMode);
+            gameViewModel.LoadLevel(levelId);
+            gameViewModel.Player.CurrentHealth = playerHealth;
+
             var gameView = new GameView(gameViewModel);
             gameView.Show();
 
-            // Закрываем меню
+            _viewModel?.StopSnowAnimation();
             this.Close();
         }
     }
