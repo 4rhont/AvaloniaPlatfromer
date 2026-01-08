@@ -7,6 +7,10 @@
         Background="Black"
         WindowStartupLocation="CenterScreen">
 
+    <Window.Resources>
+        <FontFamily x:Key="UndertaleFont">avares://GameApp/Assets/Fonts/Undertale-Battle-Font.ttf#Undertale Battle Font</FontFamily>
+    </Window.Resources>
+
     <Window.Styles>
         <Style Selector="Button.MenuButton">
             <Setter Property="Background" Value="Black" />
@@ -30,10 +34,13 @@
                 Margin="20">
         
         <TextBlock Text="ROOTS" 
-                   FontSize="32" 
+                   FontSize="40" 
                    FontWeight="Bold"
                    Foreground="White"
-                   TextAlignment="Center" />
+                   TextAlignment="Center" 
+                   FontFamily="{StaticResource UndertaleFont}"
+                   LetterSpacing="8"
+                   Margin="10,0,0,0"/>
         
         <Button Content="NEW GAME"
                 HorizontalAlignment="Center" 
