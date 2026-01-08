@@ -18,6 +18,7 @@ namespace GameApp.Core.ViewModels
         private string? _nextLevelId;
         private Platform? _endZone;
         public event Action? OnLevelCompleted;
+        public event Action? OnLevelLoaded;
 
         public bool IsDebugMode { get; private set; }
         
@@ -227,6 +228,8 @@ namespace GameApp.Core.ViewModels
             {
                 _endZone = null;  // Нет конца (бесконечный уровень?)
             }
+
+            OnLevelLoaded?.Invoke();
         }
 
         public void StartAction(GameAction action)

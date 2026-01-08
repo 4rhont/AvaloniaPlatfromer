@@ -34,7 +34,9 @@ namespace GameApp.Views
         private readonly Dictionary<Enemy, EnemyAnimationViewModel> _enemyAnimationMap = new();
         private Avalonia.Controls.Shapes.Rectangle? _debugAttackRect;
 
-        public ObservableCollection<EnemyAnimationViewModel> EnemyViewModels { get; } = new();
+        private readonly ObservableCollection<EnemyAnimationViewModel> _enemyViewModels = new();
+        public ObservableCollection<EnemyAnimationViewModel> EnemyViewModels => _enemyViewModels;
+
 
         private readonly Dictionary<string, Avalonia.Controls.Shapes.Rectangle> debugEndZoneMap = new();
         private const double VisibilityBuffer = 200;
@@ -55,7 +57,6 @@ namespace GameApp.Views
         {
             _gameVM = gameVM;
             _animationVM = new PlayerAnimationViewModel(_gameVM.Player, _gameVM);
-
             InitializeComponent();
 
             this.Focus();
@@ -73,7 +74,6 @@ namespace GameApp.Views
                     Dispatcher.UIThread.Post(UpdateHpBar);
                 }
             };
-
 
             MainCanvas.RenderTransform = new TranslateTransform();
 
@@ -340,6 +340,150 @@ namespace GameApp.Views
             _gameTimer.Tick += OnTick;
             _gameTimer.Start();
 
+            gameVM.OnLevelLoaded += () =>
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    RecreatePlatforms();
+                    RecreateEnemyViewModels();
+
+                    // Пересоздать дебаг-элементы
+                    if (gameVM.IsDebugMode)
+                    {
+                        DrawDebugPlatforms();
+                        DrawDebugEnemies();
+                        DrawDebugEndZone();
+                        
+                    }
+                });
+            };
+        }
+
+        private void RecreateEnemyViewModels()
+        {
+            // Очистить старые
+            _enemyViewModels.Clear();
+
+            // Удалить старые визуальные элементы врагов из Canvas
+            foreach (var image in _enemyVisualMap.Values)
+            {
+                MainCanvas.Children.Remove(image);
+            }
+            _enemyVisualMap.Clear();
+
+            // Удалить дебаг-прямоугольники
+            if (_gameVM.IsDebugMode)
+            {
+                foreach (var rect in _debugEnemyMap.Values)
+                {
+                    DebugCanvas.Children.Remove(rect);
+                }
+                _debugEnemyMap.Clear();
+            }
+
+            // Создать новые ViewModels для всех врагов в текущем уровне
+            foreach (var enemy in _gameVM.Enemies)
+            {
+                var animVM = new EnemyAnimationViewModel(enemy, _gameVM);
+                _enemyViewModels.Add(animVM);
+
+                // Создать визуальный элемент врага
+                var enemyImage = new Image
+                {
+                    Width = 150,
+                    Height = 150,
+                    Source = animVM.CurrentFrameBitmap,
+                    Stretch = Stretch.UniformToFill,
+                    Opacity = 1.0,
+                    IsHitTestVisible = false
+                };
+
+                var scaleTransform = new ScaleTransform { ScaleX = 1.0, ScaleY = 1.0 };
+                enemyImage.RenderTransform = scaleTransform;
+                enemyImage.RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
+
+                Canvas.SetLeft(enemyImage, enemy.X);
+                Canvas.SetTop(enemyImage, enemy.Y);
+
+                MainCanvas.Children.Insert(3, enemyImage);
+                _enemyVisualMap[enemy] = enemyImage;
+
+                // Подписаться на изменения позиции врага
+                enemy.PropertyChanged += (s, e) =>
+                {
+                    if (e.PropertyName == nameof(Enemy.X))
+                    {
+                        Dispatcher.UIThread.Post(() => Canvas.SetLeft(enemyImage, enemy.X));
+                    }
+                    if (e.PropertyName == nameof(Enemy.Y))
+                    {
+                        Dispatcher.UIThread.Post(() => Canvas.SetTop(enemyImage, enemy.Y));
+                    }
+                    if (e.PropertyName == nameof(Enemy.VelocityX))
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            if (Math.Abs(enemy.VelocityX) > 0.1)
+                            {
+                                double scaleX = enemy.VelocityX > 0 ? -1.0 : 1.0;
+                                scaleTransform.ScaleX = scaleX;
+                            }
+                        });
+                    }
+                };
+
+                // Подписаться на изменения фрейма анимации
+                animVM.PropertyChanged += (s, e) =>
+                {
+                    if (e.PropertyName == nameof(EnemyAnimationViewModel.CurrentFrameBitmap))
+                    {
+                        Dispatcher.UIThread.Post(() => enemyImage.Source = animVM.CurrentFrameBitmap);
+                    }
+                };
+
+                // Добавить дебаг-прямоугольник если нужно
+                if (_gameVM.IsDebugMode)
+                {
+                    var rect = new Avalonia.Controls.Shapes.Rectangle
+                    {
+                        Width = enemy.Width,
+                        Height = enemy.Height,
+                        Fill = null,
+                        Stroke = new SolidColorBrush(Colors.Violet),
+                        StrokeThickness = 2
+                    };
+                    Canvas.SetLeft(rect, enemy.X);
+                    Canvas.SetTop(rect, enemy.Y);
+                    DebugCanvas.Children.Add(rect);
+                    _debugEnemyMap[enemy] = rect;
+                }
+            }
+        }
+
+        private void RecreatePlatforms()
+        {
+            // Очистить визуальные элементы платформ
+            foreach (var visuals in _platformVisualMap.Values)
+            {
+                foreach (var visual in visuals)
+                {
+                    MainCanvas.Children.Remove(visual);
+                }
+            }
+            _platformVisualMap.Clear();
+
+            // Очистить дебаг-элементы
+            if (_gameVM.IsDebugMode)
+            {
+                foreach (var rect in _debugPlatformMap.Values)
+                {
+                    DebugCanvas.Children.Remove(rect);
+                }
+                _debugPlatformMap.Clear();
+            }
+
+            // Пересоздать все платформы
+            CreatePlatforms();
         }
 
         private void InitDebugAttackRect()

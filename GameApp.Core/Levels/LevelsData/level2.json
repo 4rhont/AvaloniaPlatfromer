@@ -126,12 +126,12 @@
     {
       "x": 3476,
       "y": 1367,
-      "width": 176,
-      "height": 200,
+      "width": 150,
+      "height": 120,
       "damage": 1,
       "health": 5,
-      "direction": -1, 
-      "patrolRange": 800 
+      "direction": -1,
+      "patrolRange": 800
     }
   ]
 }
