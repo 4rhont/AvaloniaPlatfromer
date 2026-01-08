@@ -4,9 +4,26 @@
         Title="My Game"
         Width="400"
         Height="500"
-        Background="#FDF8F9"
+        Background="Black"
         WindowStartupLocation="CenterScreen">
+
+    <Window.Styles>
+        <Style Selector="Button.MenuButton">
+            <Setter Property="Background" Value="Black" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Padding" Value="20,12" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="White" />
+        </Style>
     
+        <Style Selector="Button.MenuButton:pointerover /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="Gray" />
+        </Style>
+    </Window.Styles>
+
     <StackPanel VerticalAlignment="Center" 
                 HorizontalAlignment="Center" 
                 Spacing="20"
@@ -15,34 +32,24 @@
         <TextBlock Text="ROOTS" 
                    FontSize="32" 
                    FontWeight="Bold"
-                   Foreground="#134252"
+                   Foreground="White"
                    TextAlignment="Center" />
         
         <Button Content="NEW GAME"
                 HorizontalAlignment="Center" 
                 Click="NewGame_Click"
-                Background="#208081"
-                Foreground="White"
-                Padding="20,12"
-                FontSize="16"
-                FontWeight="Bold"
-                CornerRadius="8" />
+                Classes="MenuButton" />
         
         <Button Name="LoadGameButton"
                 HorizontalAlignment="Center" 
                 Content="LOAD GAME"
                 Click="LoadGame_Click"
-                Background="#6B7280"
-                Foreground="White"
-                Padding="20,12"
-                FontSize="16"
-                FontWeight="Bold"
-                CornerRadius="8"
+                Classes="MenuButton"
                 IsEnabled="False" />
         
         <Border Name="SaveInfoBorder"
-                Background="#F3F4F6"
-                BorderBrush="#D1D5DB"
+                Background="Black"
+                BorderBrush="White"
                 BorderThickness="1"
                 CornerRadius="8"
                 Padding="16"
@@ -52,29 +59,31 @@
                 <TextBlock Text="LAST SAVE" 
                            FontSize="12" 
                            FontWeight="Bold"
-                           Foreground="#6B7280" />
+                           Foreground="White" />
                 
                 <TextBlock Name="SaveTimeText"
                            FontSize="14"
-                           Foreground="#134252" />
+                           Foreground="White" />
                 
                 <TextBlock Name="SaveLevelText"
                            FontSize="14"
-                           Foreground="#134252" />
+                           Foreground="White" />
             </StackPanel>
         </Border>
 
-        <Border Background="#252e48"
-                BorderBrush="#444444"
+        <Border Background="Black"
+                BorderBrush="White"
                 BorderThickness="1"
                 CornerRadius="6"
                 Padding="12">
             
             <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                <CheckBox Name="DebugModeCheckBox"
-                          VerticalAlignment="Center" />
+                <CheckBox Name="DebugModeCheckBox" 
+                          VerticalAlignment="Center"
+                          BorderBrush="White"
+                          BorderThickness="1" />
                 <TextBlock Text="Debug Mode"
-                           Foreground="#aaaaaa"
+                           Foreground="White"
                            VerticalAlignment="Center"
                            FontSize="13" />
             </StackPanel>
