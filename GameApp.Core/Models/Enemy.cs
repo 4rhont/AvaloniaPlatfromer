@@ -16,7 +16,8 @@ namespace GameApp.Core.Models
         private int _health = 5;
         private int _maxHealth = 5;
 
-        private double _knockbackTimer = 0;
+        protected double _knockbackTimer = 0;
+        public bool IsKnockedBack => _knockbackTimer > 0;
 
         private double _startX;
         private double _patrolRange = 800;

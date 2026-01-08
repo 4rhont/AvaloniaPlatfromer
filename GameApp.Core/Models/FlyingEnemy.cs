@@ -8,8 +8,8 @@ namespace GameApp.Core.Models
 {
     public class FlyingEnemy : Enemy
     {
-        private const double PatrolSpeed = 120;
-        private const double ChaseSpeed = 220;
+        private const double PatrolSpeed = 100;
+        private const double ChaseSpeed = 160;
         private const double ChaseDistance = 600;
 
         public static List<FlightStep> CreateDefaultPattern()
@@ -62,12 +62,13 @@ namespace GameApp.Core.Models
             IsOnGround = false;
         }
 
-        public void UpdateFlying(
-            double deltaTime,
-            Player player,
-            IReadOnlyList<Platform> platforms
-        )
+        public void UpdateFlying(double deltaTime, Player player, IReadOnlyList<Platform> platforms)
         {
+            if (IsKnockedBack)
+            {
+                _knockbackTimer -= deltaTime;
+                return;
+            } 
             switch (Mode)
             {
                 case FlyingEnemyMode.Patrol:
