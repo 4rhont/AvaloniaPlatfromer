@@ -3,6 +3,7 @@ using ReactiveUI;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Reactive.Joins;
 
 namespace GameApp.Core.Models
 {
@@ -21,6 +22,21 @@ namespace GameApp.Core.Models
                 new(new Vector2(-1f, 0f), 3.0),  // Вниз 3s
                 new(new Vector2(-0.5f, 0f), 2.0) // Вверх вправо 2s
             };
+        }
+
+        public static List<FlightStep> CreateClosedPattern(int numDirections = 12, double stepDuration = 1.5, int seed = 42)
+        {
+            var rng = new Random(seed);  // процеДурно генерируем по псевдослучайному сиду
+            var pattern = new List<FlightStep>();
+            double angleStep = 2 * Math.PI / numDirections;
+            for (int i = 0; i < numDirections; i++)
+            {
+                double angle = i * angleStep + rng.NextDouble() * 0.2;  // Лёгкая рандомизация углов 
+                float dx = (float)Math.Cos(angle);
+                float dy = (float)Math.Sin(angle);
+                pattern.Add(new(new Vector2(dx, dy), stepDuration));
+            }
+            return pattern;
         }
 
         public enum FlyingEnemyMode
@@ -53,12 +69,10 @@ namespace GameApp.Core.Models
             private set => this.RaiseAndSetIfChanged(ref _mode, value);
         }
 
-        public FlyingEnemy(
-            EnemyData data,
-            List<FlightStep> flightPattern
-        ) : base(data)
+        public FlyingEnemy(EnemyData data, int? patternSeed = null) : base(data)
         {
-            _pattern = flightPattern;
+            _pattern = patternSeed.HasValue ? CreateClosedPattern(seed: patternSeed.Value)
+                        : CreateClosedPattern();  // Default 12 dir
             IsOnGround = false;
         }
 

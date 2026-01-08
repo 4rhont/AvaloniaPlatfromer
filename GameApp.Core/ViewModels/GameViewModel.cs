@@ -198,7 +198,7 @@ namespace GameApp.Core.ViewModels
                 Enemy enemy;
                 if (eData.Type?.ToLowerInvariant() == "flying")
                 {
-                    enemy = new FlyingEnemy(eData, FlyingEnemy.CreateDefaultPattern());
+                    enemy = new FlyingEnemy(eData, patternSeed: (int)eData.X % 99);
                 }
                 else
                 {
