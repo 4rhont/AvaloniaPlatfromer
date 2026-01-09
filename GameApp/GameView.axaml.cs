@@ -59,6 +59,9 @@ namespace GameApp.Views
             _animationVM = new PlayerAnimationViewModel(_gameVM.Player, _gameVM);
             InitializeComponent();
 
+            UpdateViewportSize();
+            this.SizeChanged += (s, e) => UpdateViewportSize();
+
             this.Focus();
 
             LoadHpTextures();
@@ -359,6 +362,12 @@ namespace GameApp.Views
             };
         }
 
+        private void UpdateViewportSize()
+        {
+            _gameVM.Camera.ViewportWidth = this.ClientSize.Width;
+            _gameVM.Camera.ViewportHeight = this.ClientSize.Height;
+        //    System.Diagnostics.Debug.WriteLine($"Viewport updated: {gameVM.Camera.ViewportWidth}x{gameVM.Camera.ViewportHeight}");
+        }
         private void RecreateEnemyViewModels()
         {
             // Очистить старые

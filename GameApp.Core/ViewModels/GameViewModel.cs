@@ -151,7 +151,7 @@ namespace GameApp.Core.ViewModels
             LoadLevel(_currentLevelId);
 
             // Initial setup
-            _camera.Follow(_player.X, _player.Y, _player.Width, _player.Height);
+            //_camera.Follow(_player.X, _player.Y, _player.Width, _player.Height);
             if (IsDebugMode)
             {
                 UpdateDebugInfo();  // Инициализируем дебаг информацию
@@ -229,6 +229,8 @@ namespace GameApp.Core.ViewModels
             {
                 _endZone = null;  // Нет конца (бесконечный уровень?)
             }
+
+            _camera.Follow(_player.X, _player.Y, _player.Width, _player.Height);
 
             OnLevelLoaded?.Invoke();
         }

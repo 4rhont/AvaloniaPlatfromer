@@ -38,7 +38,7 @@ namespace GameApp.Core.Models
         public int StuckCounter { get => _stuckCounter; set => this.RaiseAndSetIfChanged(ref _stuckCounter, value); }
         private int _stuckCounter = 0;
         public const int StuckThreshold = 3;  // Кол-во кадров без движения для разворота
-        public const double StuckEpsilon = 1;  // Минимальное изменение X для "движения" (пиксели за кадр)
+        public const double StuckEpsilon = 0.5;  // Минимальное изменение X для "движения" (пиксели за кадр)
 
         public void SavePreviousPosition()
         {
