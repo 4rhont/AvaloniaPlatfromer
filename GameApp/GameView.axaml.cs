@@ -930,6 +930,14 @@ namespace GameApp.Views
                 _gameVM.ShowFps = !_gameVM.ShowFps;
                 e.Handled = true;
             }
+
+            if (e.Key == Key.Escape)
+            {
+                // Возврат в меню
+                var mainWindow = new MainWindow();
+                mainWindow.Show();
+                this.Close();
+            }
         }
 
         private void OnKeyUp(object? sender, KeyEventArgs e)

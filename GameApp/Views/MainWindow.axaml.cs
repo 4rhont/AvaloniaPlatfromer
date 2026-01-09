@@ -101,10 +101,15 @@ namespace GameApp.Views
             gameViewModel.Player.CurrentHealth = playerHealth;
 
             var gameView = new GameView(gameViewModel);
+
+            // Полноэкранный режим
+            gameView.WindowState = Avalonia.Controls.WindowState.FullScreen;
+            //gameView.WindowStyle = Avalonia.Controls.WindowStyle.None; // Без рамки/заголовка
             gameView.Show();
 
             _viewModel?.StopSnowAnimation();
             this.Close();
         }
+
     }
 }

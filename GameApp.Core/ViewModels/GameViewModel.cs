@@ -264,7 +264,7 @@ namespace GameApp.Core.ViewModels
         }
 
         private double _accumulator = 0;
-        private const double FixedDelta = 1.0 / 60.0;
+        private const double FixedDelta = 1.0 / 120.0;
 
         private int MaxSteps = 5;
 
